@@ -35,6 +35,13 @@ sum(isnan(new_precip))
 %% Fill missing data values somehow!
 % Neighboring GHCN sites for Berkeley:
 
+% Maybe use GSOD:
+% ftp://ftp.ncdc.noaa.gov/pub/data/gsod
+
+% Or NOAA's Quality controlled local climatological data:
+% http://cdo.ncdc.noaa.gov/qclcd/QCLCD
+
+
 %% Get model data
 
 
