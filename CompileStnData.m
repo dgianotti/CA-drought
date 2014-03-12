@@ -98,6 +98,13 @@ precip_vec(precip_vec < 0) = nan;
 
 precip_vec = precip_vec/10; % Now in mm
 
+unfilled = (month_vec == 0);
+year_vec(unfilled) = [];
+month_vec(unfilled) = [];
+day_vec(unfilled) = [];
+precip_vec(unfilled) = [];
+
+
 date_vec = datenum( [num2str(year_vec),repmat('-',[length(precip_vec),1]),...
     num2str(month_vec,'%02d'),repmat('-',[length(precip_vec),1]),num2str(day_vec,'%02d')] );
 
