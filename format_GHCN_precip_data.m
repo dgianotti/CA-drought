@@ -8,45 +8,39 @@ function [datenums, precip] = format_GHCN_precip_data(filename,varargin)
 % the date in datenums.
 %
 %
-% format_GHCN_precip_data(filename,'PadFirstLastYears',true) extends
+% format_GHCN_precip_data(filename,'PadFirstLastYears') extends
 % datenums to Jan 1 of the first year in the dataset and to Dec 31 of the
 % last year of the dataset  [default: false]. Corresponding precip values
 % are NaN.
 %
 %
-% format_GHCN_precip_data(filename,'ExcludeLeapDays',true) removes all
+% format_GHCN_precip_data(filename,'ExcludeLeapDays') removes all
 % February 29ths from the data set [default: false].
+%
+%
+% format_GHCN_precip_data(filename,'MFLAG_P_AsZero') sets all missing
+% values with the MFLAG value of 'P' (missing presumed zero) to be zero
+% instead of NaN.
 
 ExcludeLeapDays = false; % default
 PadFirstLastYears = false; % default
+MFLAG_P_AsNaN = false; % default
 
-if nargin == 3 % Flags for ExcludeLeapDays or PadFirstLastYears
-    if (strcmpi(varargin{1},'ExcludeLeapDays'))
-        ExcludeLeapDays = varargin{2};
-    elseif (strcmpi(varargin{1},'PadFirstLastYears'))
-        PadFirstLastYears = varargin{2};
-    else
-        error('The second argument to format_GHCN_precip_data should be either ExcludeLeapDays or PadFirstLastYears. Aborting!\n');
-    end
-elseif nargin == 5 % Flags for ExcludeLeapDays AND PadFirstLastYears
-    if (strcmpi(varargin{1},'ExcludeLeapDays'))
-        ExcludeLeapDays = varargin{2};
-    elseif (strcmpi(varargin{1},'PadFirstLastYears'))
-        PadFirstLastYears = varargin{2};
-    else
-        error('The second argument to format_GHCN_precip_data should be either ExcludeLeapDays or PadFirstLastYears. Aborting!\n');
-    end
-    
-    if (strcmpi(varargin{3},'ExcludeLeapDays'))
-        ExcludeLeapDays = varargin{4};
-    elseif (strcmpi(varargin{3},'PadFirstLastYears'))
-        PadFirstLastYears = varargin{4};
-    else
-        error('The fourth argument to format_GHCN_precip_data should be either ExcludeLeapDays or PadFirstLastYears. Aborting!\n');
-    end
-    
+if ismember(nargin, 2:4) 
+    for i = 1:length(varargin)
+        switch varargin{i}
+            case 'ExcludeLeapDays'
+                ExcludeLeapDays = true;
+            case 'PadFirstLastYears'
+                PadFirstLastYears = true;
+            case 'MFLAG_P_AsNaN'
+                MFLAG_P_AsNaN = true;
+            otherwise
+                error('Expected optional arguments to format_GHCN_precip_data to be one of ExcludeLeapDays, PadFirstLastYears, or MFLAG_P_AsNaN. Aborting!');
+        end
+    end                
 elseif nargin ~= 1 
-    error('The function format_GHCN_precip_data should have 1, 3, or 5 inputs. Aborting!\n');
+    error('The function format_GHCN_precip_data should have 1, 3, 5, or 7 inputs. Aborting!');
 end
     
 
@@ -93,11 +87,20 @@ YEAR = cell2mat(D{2});
 D{3} = cellfun(@str2num, D{3}, 'UniformOutput', false);
 MONTH = cell2mat(D{3});
 
-VALUE = nan(size(YEAR),31);
+VALUE = nan(size(YEAR,1),31);
 day = 1;
 for i = 5:4:125 % All of the 'VALUE' columns
      D{i} = cellfun(@str2num, D{i}, 'UniformOutput', false);
-     VALUE(:,day) = cell2mat(D{i});
+     D{i} = cell2mat(D{i});
+     
+     % If MFLAG_P_AsZero is set to true, set appropriate values to zero:
+     if MFLAG_P_AsNaN
+         D{i}(strcmp(D{i+1},'P')) = -9999;
+     else 
+         D{i}(strcmp(D{i+1},'P')) = 0;
+     end
+     
+     VALUE(:,day) = D{i};
      day = day+1;
 end
 
