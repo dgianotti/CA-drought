@@ -105,7 +105,11 @@ for yr = min_year:max_year
             F = textscan(fid, fmt, 'Delimiter',',', 'HeaderLines',1);
             fclose(fid);
             
+                       
             QCLCD_precip = str2double(F{31});
+            % Set "trace" amounts to zero:
+            QCLCD_precip(isnan(QCLCD_precip)) = 0;
+            
             QCLCD_date = F{2};
             QCLCD_wban = F{1};
             
