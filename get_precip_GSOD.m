@@ -12,7 +12,7 @@ function precip = get_precip_GSOD(datenums,lat,lon,max_distance)
 % those days.
 
 %datenums = missing_data_datenums;
-%max_distance = 15;
+%max_distance = 20;
 
 % Make sure you have the GSOD station list:
 ish_file_downloaded = (exist('ish-history.csv') == 2);
@@ -124,7 +124,8 @@ for i = 1:length(distances)
         url = ['ftp://ftp.ncdc.noaa.gov/pub/data/gsod/',...
             num2str(yr),'/', gz_filename];
         try
-            if (~exist(['GSOD/',op_filename],'file') && (yr>=STARTYEAR{i}) && (yr <= ENDYEAR{i}))
+            if (~exist(['GSOD/',op_filename],'file') &&...
+                    (yr>=STARTYEAR(i)) && (yr <= ENDYEAR(i)))
                 urlwrite(url,['GSOD/',gz_filename],'Timeout',20);
                 gunzip(['GSOD/',gz_filename]);
                 delete(['GSOD/',gz_filename]);
@@ -161,7 +162,7 @@ for i = 1:length(distances)
                 end
             end
             
-            if (numel(isnan(precip)) == 0)
+            if (sum(isnan(precip)) == 0)
                 % Then we filled them all!
                 fprintf('All precip data filled!\n');
                 return;
