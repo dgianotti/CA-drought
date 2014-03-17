@@ -79,9 +79,19 @@ for yr = min_year:max_year
             distances = lldistkm([lat,lon],[LAT,LON]);
             [d,idx] = min(distances);
             wban_id = WBAN{idx};
+
+            seemingly_bad_stations = {'23239'};
+            while any(ismember(seemingly_bad_stations, wban_id))
+                distances(idx) = inf;
+                [d,idx] = min(distances);
+                wban_id = WBAN{idx};
+            end
+                
             loc = cell2mat(F{9}(idx));
             fprintf('The closest station is %1.1f km away at %s,\nWBAN ID: %s.\n',...
                 d,loc,wban_id);
+            
+                
 
             % Now fill in the missing data with data from that station:
             clear('F');
@@ -109,9 +119,17 @@ for yr = min_year:max_year
             for i = 1:size(this_months_date_strings,1)
                 % For each missing date:
                 YYYYMMDD = this_months_date_strings(i,:);
-                precip( datenums == datenum(YYYYMMDD,'yyyymmdd') ) = ...
-                    QCLCD_precip( strcmp(YYYYMMDD,QCLCD_date) & ...
-                    strcmp(wban_id,QCLCD_wban) );
+                if ( sum(strcmp(YYYYMMDD,QCLCD_date) & ...
+                        strcmp(wban_id,QCLCD_wban)) == 1)
+                
+                    precip( datenums == datenum(YYYYMMDD,'yyyymmdd') ) = ...
+                        QCLCD_precip( strcmp(YYYYMMDD,QCLCD_date) & ...
+                        strcmp(wban_id,QCLCD_wban) );
+                else
+                    fprintf('There are %i values for the date %s.\n Cannot fill data!\n',...
+                        sum(strcmp(YYYYMMDD,QCLCD_date) & ...
+                        strcmp(wban_id,QCLCD_wban)),YYYYMMDD);
+                end
             end
             
             

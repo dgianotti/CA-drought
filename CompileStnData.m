@@ -28,26 +28,24 @@ end
 
 
 %% Fill missing data values somehow!
-% Neighboring GHCN sites for Berkeley:
-
-% Maybe use GSOD:
-% ftp://ftp.ncdc.noaa.gov/pub/data/gsod
+% Neighboring GHCN sites for Berkeley?
 
 missing_data_datenums = new_datenums(isnan(new_precip)) ;
 
 lat = 37 + (52/60) + (18/3600);
 lon = -(122 + (16/60) + (22/3600));
 
-filled_precip = get_precip_GSOD(missing_data_datenums,lat,lon,20);
 
-for i = 1:length(missing_data_datenums)
-    precip( find(datenums == missing_data_datenums(i)) ) = filled_precip(i);
-end
-precip(43508)
+% Maybe use GSOD:
+% ftp://ftp.ncdc.noaa.gov/pub/data/gsod
+
+% filled_precip = get_precip_GSOD(missing_data_datenums,lat,lon,20);
 
 
 % Or NOAA's Quality controlled local climatological data:
 % http://cdo.ncdc.noaa.gov/qclcd/QCLCD
+filled_precip = get_precip_QCLCD(missing_data_datenums,lat,lon);
+
 
 %% Load old precip data:
 ImpStn = load_stn_data(id,'ImpStn');
