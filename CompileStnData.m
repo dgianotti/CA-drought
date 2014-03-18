@@ -22,7 +22,7 @@ for i = 1:length(CA_IDs)
     % Set last day to Feb 28, 2014:
     feb28_2014 = datenum('2014-02-28','yyyy-mm-dd');
     datenums = [datenums(:); ((datenums(end)+1):feb28_2014)'];
-    precip = [precip(:); nan([length(datenums)-length(precip),1)];
+    precip = [precip(:); nan([length(datenums)-length(precip),1])];
         
     new_precip = precip(datenums>= datenum('2010-01-01'));
     new_datenums = datenums(datenums>= datenum('2010-01-01'));
@@ -37,21 +37,18 @@ for i = 1:length(CA_IDs)
     missing_data_datenums = new_datenums(isnan(new_precip)) ;
     
     % Look up lat/lon in ushcn-stations.txt:
+    [lat, lon] = get_ushcn_lat_lon(id);
     
-    lat = 37 + (52/60) + (18/3600);
-lon = -(122 + (16/60) + (22/3600));
+    % Maybe use GSOD:
+    % ftp://ftp.ncdc.noaa.gov/pub/data/gsod
+    
+    % filled_precip = get_precip_GSOD(missing_data_datenums,lat,lon,20);
 
+    % Or NOAA's Quality controlled local climatological data:
+    % http://cdo.ncdc.noaa.gov/qclcd/QCLCD
+    filled_precip = get_precip_QCLCD(missing_data_datenums,lat,lon);
 
-% Maybe use GSOD:
-% ftp://ftp.ncdc.noaa.gov/pub/data/gsod
-
-% filled_precip = get_precip_GSOD(missing_data_datenums,lat,lon,20);
-
-
-% Or NOAA's Quality controlled local climatological data:
-% http://cdo.ncdc.noaa.gov/qclcd/QCLCD
-filled_precip = get_precip_QCLCD(missing_data_datenums,lat,lon);
-
+end
 
 %% Load old precip data:
 ImpStn = load_stn_data(id,'ImpStn');

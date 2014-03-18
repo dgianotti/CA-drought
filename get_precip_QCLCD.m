@@ -77,8 +77,8 @@ for yr = min_year:max_year
             
             % We just need the ID, lat, and lon:
             WBAN = F{1};
-            LAT = cellfun(@str2num,F{10});
-            LON = cellfun(@str2num,F{11});
+            LAT = cellfun(@str2num,F{10},'UniformOutput',false);
+            LON = cellfun(@str2num,F{11},'UniformOutput',false);
             
             % Find the closest station:
             distances = lldistkm([lat,lon],[LAT,LON]);
