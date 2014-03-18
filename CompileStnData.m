@@ -8,31 +8,37 @@ clc;
 load('CA_ids.mat');
 
 %% Download data:
-% for i = 1:length(CA_IDs)
-id = CA_IDs{1}; % Berkeley
-% Download the latest USHCN data:
-url = ['http://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00',id,'.dly'];
-filename = [id,'.dly'];
-urlwrite(url,filename);
+for i = 1:length(CA_IDs)
+    id = CA_IDs{i}; % Berkeley
+    % Download the latest USHCN data:
+    url = ['http://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00',id,'.dly'];
+    filename = [id,'.dly'];
+    urlwrite(url,filename);
 
-%% Read in fixed-width data:
+    
+    % Read in fixed-width data:
+    [datenums,precip] = format_GHCN_precip_data(filename,'PadFirstLastYears','ExcludeLeapDays','MFLAG_P_AsNaN');
 
-[datenums,precip] = format_GHCN_precip_data(filename,'PadFirstLastYears','ExcludeLeapDays','MFLAG_P_AsNaN');
+    % Set last day to Feb 28, 2014:
+    feb28_2014 = datenum('2014-02-28','yyyy-mm-dd');
+    datenums = [datenums(:); ((datenums(end)+1):feb28_2014)'];
+    precip = [precip(:); nan([length(datenums)-length(precip),1)];
+        
+    new_precip = precip(datenums>= datenum('2010-01-01'));
+    new_datenums = datenums(datenums>= datenum('2010-01-01'));
 
-new_precip = precip(datenums>= datenum('2010-01-01'));
-new_datenums = datenums(datenums>= datenum('2010-01-01'));
-
-if mod(length(new_precip),365) ~= 0 %uh oh... it should...
-    error('The new data should be a multiple of 365 days... did you use ExcludeLeapDays in format_GHCN_precip_data\n');
-end
+    %if (mod(length(new_precip),365) ~= 0) %uh oh... it should...
+    %error('The new data should be a multiple of 365 days... did you use ExcludeLeapDays in format_GHCN_precip_data\n');
+    %end
 
 
-%% Fill missing data values somehow!
-% Neighboring GHCN sites for Berkeley?
-
-missing_data_datenums = new_datenums(isnan(new_precip)) ;
-
-lat = 37 + (52/60) + (18/3600);
+    % Fill missing data values somehow!
+    % Neighboring GHCN sites for Berkeley?
+    missing_data_datenums = new_datenums(isnan(new_precip)) ;
+    
+    % Look up lat/lon in ushcn-stations.txt:
+    
+    lat = 37 + (52/60) + (18/3600);
 lon = -(122 + (16/60) + (22/3600));
 
 
