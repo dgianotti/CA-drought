@@ -22,6 +22,11 @@ datenums_yyyy = cellstr(datestr(datenums,'yyyy'));
 datenums_mm = cellstr(datestr(datenums,'mm'));
 datenums_dd = cellstr(datestr(datenums,'dd'));
 
+% Make sure the QCLCD directory exists:
+if ~exist('QCLCD','dir')
+    % Make the directory:
+    mkdir('QCLCD');
+end
 
 for yr = min_year:max_year
     
