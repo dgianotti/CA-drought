@@ -13,7 +13,7 @@ for i = 1:length(CA_IDs)
     % Download the latest USHCN data:
     url = ['http://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00',id,'.dly'];
     filename = [id,'.dly'];
-    urlwrite(url,filename);
+    %urlwrite(url,filename);
 
     
     % Read in fixed-width data:

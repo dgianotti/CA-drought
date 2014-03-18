@@ -31,6 +31,7 @@ end
 for yr = min_year:max_year
     
     for mnth = 1:12
+        this_months_datenums_dd = [];
         YYYYMM = [num2str(yr),num2str(mnth,'%02i')];
         % If there are any missing dates in this month, get the data and
         % fill in precip:
@@ -77,8 +78,21 @@ for yr = min_year:max_year
             
             % We just need the ID, lat, and lon:
             WBAN = F{1};
-            LAT = cellfun(@str2num,F{10},'UniformOutput',false);
-            LON = cellfun(@str2num,F{11},'UniformOutput',false);
+            perhaps_problematic_lat = F{10};
+            problem_lats = strcmp('',perhaps_problematic_lat);
+            perhaps_problematic_lat(problem_lats) = {'9999'};
+            
+            perhaps_problematic_lon = F{11};
+            problem_lons = strcmp('',perhaps_problematic_lon);
+            perhaps_problematic_lon(problem_lons) = {'9999'};
+            
+            
+            LAT = cellfun(@str2num,perhaps_problematic_lat);
+            LON = cellfun(@str2num,perhaps_problematic_lon);
+
+            LAT(LAT==9999) = nan;
+            LON(LON==9999) = nan;
+            
             
             % Find the closest station:
             distances = lldistkm([lat,lon],[LAT,LON]);
