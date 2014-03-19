@@ -130,10 +130,10 @@ month_vec = year_vec;
 day_vec = year_vec;
 precip = year_vec;
 
-n_rows = size(YEAR,1);
+%n_rows = size(YEAR,1);
 idx = 1;
 
-num_months = 12*range(YEAR);
+num_months = 12*(range(YEAR)+1);
 for i = 1:num_months
     yr = min(YEAR) + ceil((i)/12) - 1;
     mnth = mod(i-1,12)+1;
