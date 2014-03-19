@@ -3,7 +3,7 @@
 clear;
 clc;
 
-%addpath('C:\Users\gianotti\Documents\IntensityLib');
+addpath('C:\Users\gianotti\Documents\IntensityLib');
 
 load('CA_ids.mat');
 
@@ -19,13 +19,13 @@ good_CA_IDs = CA_IDs(fraction_missing_vec < 0.05);
     
 
 %% Loop over stations:
-% for i = 1:length(good_CA_IDs)
-for i = 1
+for i = 1:length(good_CA_IDs)
+
     id = good_CA_IDs{i}
     % Download the latest USHCN data:
     url = ['http://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00',id,'.dly'];
-    filename = [id,'.dly'];
-    urlwrite(url,filename);
+    filename = ['GHCN-Daily/',id,'.dly'];
+    %urlwrite(url,filename);
     
     
     % Read in fixed-width data:
@@ -64,20 +64,42 @@ for i = 1
     % http://cdo.ncdc.noaa.gov/qclcd/QCLCD
     % filled_precip = get_precip_QCLCD(missing_data_datenums,lat,lon);
 
-end
+    % Load old precip data:
+    ImpStn = load_stn_data(id,'ImpStn');
 
-%% Load old precip data:
-ImpStn = load_stn_data(id,'ImpStn');
+    % Determine likelihood of data given model:
+    
+    nan_padded_new_data = nan(365*5,1);
+    nan_padded_new_data(1:length(new_precip)) = new_precip;
+    
+    data = [ImpStn.intensity_data; reshape(nan_padded_new_data,[365,5])'];
+        
+    normalize_LL = true;
+    start_year = 2010 - ImpStn.num_years;
+    [LL_obs, years] = get_annual_log_likelihood(id, data, start_year, normalize_LL);
+    
+    % Now sim data!
+    SimStn = load_stn_data(id,'SimStn');        
 
-intensity_data = ImpStn.intensity_data;
+    [LL_sim, ~] = get_annual_log_likelihood(id, SimStn.intensity_data, start_year, normalize_LL);
 
-
-new_intensity_data = [intensity_data; reshape(new_precip,[length(new_precip)/365,365])];
-sum(isnan(new_precip))
-
-%% Get model data
-
-
-%% Determine likelihood of data given model:
-
-%% Determine
+    n_years = length(years);
+    num_useable_sims = floor(length(LL_sim)/n_years);
+    LL_sim = LL_sim(1:(n_years*num_useable_sims));
+    LL_sim = reshape(LL_sim, [n_years,num_useable_sims]);
+    
+    plot(years,LL_obs,'-k');
+    hold on;
+    plot(years,quantile(LL_sim,.05,2),'-b');
+    plot(years,quantile(LL_sim,.95,2),'-b');
+    plot(years,quantile(LL_sim,.5,2),'-r');
+    ylabel('Log Likelihood');
+    title(sprintf('Normalized annual log likelihood precipitation for station %s',id)); 
+    
+    print(gcf,'-dpng',sprintf('LL_%s.png',id));
+    save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','years');
+    
+end 
+    
+    
+    
