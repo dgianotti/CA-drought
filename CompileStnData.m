@@ -103,7 +103,7 @@ end
     
 %% Let's do some GMM fitting!
 
-for i = 3:length(good_CA_IDs)
+for i = 1:length(good_CA_IDs)
     close all;
     id = good_CA_IDs{i}
     filename = ['LL_',id,'.mat'];    
