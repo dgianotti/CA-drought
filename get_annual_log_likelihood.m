@@ -54,9 +54,23 @@ for day = 1:365
     % Assign LL for occurrence
     LL_occ(:,day) = log(( (todays_rain > 0) .* p_occ_today) + ((todays_rain == 0) .* (1-p_occ_today)));
     
-    % Assign LL for intensity
-    LL_int(:,day) = assign_LL_int(todays_rain, best_params{day});
-    
+    % Assign LL for intensity     
+    int_chain_order = log2(size(best_params{day},2));
+    switch int_chain_order
+        case 0
+            LL_int(:,day) = assign_LL_int(todays_rain, best_params{day});
+        case 1 
+            params = best_params{day};
+            rained_yesterday = (history(:,5) > 1);
+            no_rain_yesterday = (history(:,5) == 0); % Need seperate cases due to nans
+            nan_yesterday = isnan(history(:,5));
+            LL_int(rained_yesterday,day) = assign_LL_int(todays_rain(rained_yesterday), params(:,2));
+            LL_int(no_rain_yesterday,day) = assign_LL_int(todays_rain(no_rain_yesterday), params(:,1));
+            LL_int(nan_yesterday,day) = nan;
+
+        otherwise
+            error('We need to add cases for higher chain orders still. Aborting!');
+    end   
 end
 
 % You can add up the days first, or add the int and occ first, it doesn't
