@@ -121,36 +121,42 @@ for i = 1:length(good_CA_IDs)
     close all;
 end
 %% Plot LL versus precip for each station:
-figure;
-
-for i = 1:length(good_CA_IDs)
-    id = good_CA_IDs{i};
-    load(['LL_',id,'.mat']);
-    SimStn = load_stn_data(id,'SimStn');
-    ImpStn = load_stn_data(id,'ImpStn');
-    subplot(5,3,i);
-    sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
-    obs_precip = ImpStn.intensity_data(1:size(LL_obs,1),:);
-    scatter(sim_precip(:),LL_sim(:),'.r');
-    hold on;
-    scatter(obs_precip(:),LL_obs(:),'.b');        
-    title(id)
-end
-
-print(gcf,'-dpng','LL_vs_precip.png');
+% figure;
+% 
+% for i = 1:length(good_CA_IDs)
+%     id = good_CA_IDs{i}
+%     load(['LL_',id,'.mat']);
+%     SimStn = load_stn_data(id,'SimStn');
+%     ImpStn = load_stn_data(id,'ImpStn');
+%     subplot(5,3,i);
+%     sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
+%     obs_precip = ImpStn.intensity_data; % Ignoring new (post 2010) data for now...
+%     LL_obs = LL_obs(1:size(obs_precip,1),:);
+%     
+%     scatter(sim_precip(:),LL_sim(:),'.r');
+%     hold on;
+%     scatter(obs_precip(:),LL_obs(:),'.b');        
+%     title(id)
+% end
+% 
+% print(gcf,'-dpng','LL_vs_precip.png');
 
 
 %% Plot annual cycle of precip and LL at each station:
-figure;
+
 
 for i = 1:length(good_CA_IDs)
-    id = good_CA_IDs{i};
+    figure;
+    id = good_CA_IDs{i}
     load(['LL_',id,'.mat']);
     SimStn = load_stn_data(id,'SimStn');
     ImpStn = load_stn_data(id,'ImpStn');
     subplot(2,2,1);
     sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
-    obs_precip = ImpStn.intensity_data(1:size(LL_obs,1),:);
+   
+    obs_precip = ImpStn.intensity_data; % Ignoring new (post 2010) data for now...
+    LL_obs = LL_obs(1:size(obs_precip,1),:);
+    
     plot(1:365,mean(sim_precip,1),'-r');
     hold on;
     plot(1:365,mean(obs_precip,1),'-b');
@@ -180,6 +186,8 @@ for i = 1:length(good_CA_IDs)
     legend({'Sim','Obs'});
     
     print(gcf,'-dpng',sprintf('Seasonal_precip_LL_%s.png',id));
+    close all;
+    
 end
 
 
