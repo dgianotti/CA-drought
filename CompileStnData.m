@@ -148,7 +148,7 @@ for i = 1:length(good_CA_IDs)
     load(['LL_',id,'.mat']);
     SimStn = load_stn_data(id,'SimStn');
     ImpStn = load_stn_data(id,'ImpStn');
-    subplot(2,1,1);
+    subplot(2,2,1);
     sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
     obs_precip = ImpStn.intensity_data(1:size(LL_obs,1),:);
     plot(1:365,mean(sim_precip,1),'-r');
@@ -158,8 +158,9 @@ for i = 1:length(good_CA_IDs)
     xlim([1,365]);
     ylabel('Mean Daily Precip. [mm]');
     legend({'Sim','Obs'});
+    title(id);
     
-    subplot(2,1,2);
+    subplot(2,2,3);
     plot(1:365,mean(LL_sim,1),'-r');
     hold on;
     plot(1:365,nanmean(LL_obs,1),'-b');
@@ -168,6 +169,16 @@ for i = 1:length(good_CA_IDs)
     ylabel('Mean Daily LL');
     legend({'Sim','Obs'});
 
+    subplot(2,2,[2,4]);
+    sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
+    obs_precip = ImpStn.intensity_data(1:size(LL_obs,1),:);
+    scatter(sim_precip(:),LL_sim(:),'.r');
+    hold on;
+    scatter(obs_precip(:),LL_obs(:),'.b');        
+    xlabel('Precipitation [mm]');
+    ylabel('Log-Likelihood');
+    legend({'Sim','Obs'});
+    
     print(gcf,'-dpng',sprintf('Seasonal_precip_LL_%s.png',id));
 end
 
