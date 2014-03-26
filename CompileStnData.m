@@ -25,7 +25,7 @@ for i = 1:length(good_CA_IDs)
     % Download the latest USHCN data:
     url = ['http://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00',id,'.dly'];
     filename = ['GHCN-Daily/',id,'.dly'];
-    %urlwrite(url,filename);
+    urlwrite(url,filename);
     
     
     % Read in fixed-width data:
@@ -76,16 +76,37 @@ for i = 1:length(good_CA_IDs)
         
     normalize_LL = true;
     start_year = 2010 - ImpStn.num_years;
-    [LL_obs, years] = get_annual_log_likelihood(id, data, start_year, normalize_LL);
+    %[LL_obs, years] = get_annual_log_likelihood(id, data, start_year, normalize_LL);
+    [LL_obs, years] = get_daily_log_likelihood(id, data, start_year);
     
     % Now sim data!
     SimStn = load_stn_data(id,'SimStn');        
 
-    [LL_sim, ~] = get_annual_log_likelihood(id, SimStn.intensity_data, start_year, normalize_LL);
+    %[LL_sim, ~] = get_annual_log_likelihood(id, SimStn.intensity_data, start_year, normalize_LL);
+    [LL_sim, ~] = get_daily_log_likelihood(id, SimStn.intensity_data, start_year);
+    save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','years');
+    
+end 
+    
+
+%% Make annual plots!
+    
+for i = 1:length(good_CA_IDs)
+    id = good_CA_IDs{i};
+    load(['LL_',id,'.mat']);
+    
+    bad_data_obs = isnan(LL_obs);
+    LL_obs = nanmean(LL_obs,2);
 
     n_years = length(years);
     num_useable_sims = floor(length(LL_sim)/n_years);
-    LL_sim = LL_sim(1:(n_years*num_useable_sims));
+    bad_data_sim = repmat(bad_data_obs,[num_useable_sims,1]);
+       
+    % Put NaNs into the sim data at the same locations...
+    LL_sim = LL_sim(1:(n_years*num_useable_sims),:);
+    LL_sim(bad_data_sim) = nan;
+    LL_sim = nanmean(LL_sim,2);
+    
     LL_sim = reshape(LL_sim, [n_years,num_useable_sims]);
     
     plot(years,LL_obs,'-k');
@@ -97,10 +118,20 @@ for i = 1:length(good_CA_IDs)
     title(sprintf('Normalized annual log likelihood precipitation for station %s',id)); 
     
     print(gcf,'-dpng',sprintf('LL_%s.png',id));
-    save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','years');
     close all;
-end 
+end
+%% Plot LL versus precip for each station:
+figure;
+
+for i = 1:length(good_CA_IDs)
+    id = good_CA_IDs{i};
+    load(['LL_',id,'.mat']);
     
+    
+end
+
+
+
 %% Let's do some GMM fitting!
 
 for i = 1:length(good_CA_IDs)
