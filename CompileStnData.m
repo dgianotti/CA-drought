@@ -96,7 +96,7 @@ for i = 1:length(good_CA_IDs)
     load(['LL_',id,'.mat']);
     
     bad_data_obs = isnan(LL_obs);
-    LL_obs = nanmean(LL_obs,2);
+    LL_obs_annual = nanmean(LL_obs,2);
 
     n_years = length(years);
     num_useable_sims = floor(length(LL_sim)/n_years);
@@ -109,7 +109,7 @@ for i = 1:length(good_CA_IDs)
     
     LL_sim = reshape(LL_sim, [n_years,num_useable_sims]);
     
-    plot(years,LL_obs,'-k');
+    plot(years,LL_obs_annual,'-k');
     hold on;
     plot(years,quantile(LL_sim,.05,2),'-b');
     plot(years,quantile(LL_sim,.95,2),'-b');
@@ -117,7 +117,7 @@ for i = 1:length(good_CA_IDs)
     ylabel('Log Likelihood');
     title(sprintf('Normalized annual log likelihood precipitation for station %s',id)); 
     
-    print(gcf,'-dpng',sprintf('LL_%s.png',id));
+    print(gcf,'-dpng',sprintf('LL_annual_%s.png',id));
     close all;
 end
 %% Plot LL versus precip for each station:
@@ -126,9 +126,52 @@ figure;
 for i = 1:length(good_CA_IDs)
     id = good_CA_IDs{i};
     load(['LL_',id,'.mat']);
-    
-    
+    SimStn = load_stn_data(id,'SimStn');
+    ImpStn = load_stn_data(id,'ImpStn');
+    subplot(5,3,i);
+    sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
+    obs_precip = ImpStn.intensity_data(1:size(LL_obs,1),:);
+    scatter(sim_precip(:),LL_sim(:),'.r');
+    hold on;
+    scatter(obs_precip(:),LL_obs(:),'.b');        
+    title(id)
 end
+
+print(gcf,'-dpng','LL_vs_precip.png');
+
+
+%% Plot annual cycle of precip and LL at each station:
+figure;
+
+for i = 1:length(good_CA_IDs)
+    id = good_CA_IDs{i};
+    load(['LL_',id,'.mat']);
+    SimStn = load_stn_data(id,'SimStn');
+    ImpStn = load_stn_data(id,'ImpStn');
+    subplot(2,1,1);
+    sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
+    obs_precip = ImpStn.intensity_data(1:size(LL_obs,1),:);
+    plot(1:365,mean(sim_precip,1),'-r');
+    hold on;
+    plot(1:365,mean(obs_precip,1),'-b');
+    xlabel('Day of Year');
+    xlim([1,365]);
+    ylabel('Mean Daily Precip. [mm]');
+    legend({'Sim','Obs'});
+    
+    subplot(2,1,2);
+    plot(1:365,mean(LL_sim,1),'-r');
+    hold on;
+    plot(1:365,nanmean(LL_obs,1),'-b');
+    xlabel('Day of Year');
+    xlim([1,365]);
+    ylabel('Mean Daily LL');
+    legend({'Sim','Obs'});
+
+    print(gcf,'-dpng',sprintf('Seasonal_precip_LL_%s.png',id));
+end
+
+
 
 
 
