@@ -74,15 +74,12 @@ for i = 1:length(good_CA_IDs)
     
     data = [ImpStn.intensity_data; reshape(nan_padded_new_data,[365,5])'];
         
-    normalize_LL = true;
     start_year = 2010 - ImpStn.num_years;
-    %[LL_obs, years] = get_annual_log_likelihood(id, data, start_year, normalize_LL);
     [LL_obs, years] = get_daily_log_likelihood(id, data, start_year);
     
     % Now sim data!
     SimStn = load_stn_data(id,'SimStn');        
 
-    %[LL_sim, ~] = get_annual_log_likelihood(id, SimStn.intensity_data, start_year, normalize_LL);
     [LL_sim, ~] = get_daily_log_likelihood(id, SimStn.intensity_data, start_year);
     save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','years');
     
@@ -178,9 +175,9 @@ for i = 1:length(good_CA_IDs)
     subplot(2,2,[2,4]);
     sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
     obs_precip = ImpStn.intensity_data(1:size(LL_obs,1),:);
-    scatter(sim_precip(:),LL_sim(:),'.r');
+    plot(sim_precip(:),LL_sim(:),'.r');
     hold on;
-    scatter(obs_precip(:),LL_obs(:),'.b');        
+    plot(obs_precip(:),LL_obs(:),'.b');        
     xlabel('Precipitation [mm]');
     ylabel('Log-Likelihood');
     legend({'Sim','Obs'});
@@ -191,8 +188,38 @@ for i = 1:length(good_CA_IDs)
 end
 
 
+%% Now, since there is obviously a seasonal cycle of LL, let's remove it 
+% so that we can compare across different time periods:
+clear;
+clc;
 
+addpath('C:\Users\gianotti\Documents\IntensityLib');
 
+load('CA_ids.mat');
+
+fraction_missing_vec = [ 0.2302, 0.3140, 1, 0.2133, 0.4727, ...
+    0.0111, 0.0364, 0.0078, 0.2055, 0.0559, ...
+    0.6050, 0.0013, 0.0124, 0.3296, 0.2581, ...
+    0.1248, 0.0377, 0.0013, 0.2302, 0.0663, ...
+    0.0026, 0.0020, 0.0104, 0.0228, 0.0449, ...
+    0.1990, 0.5379, 0.1586, 0.1944, 0.5879, ...
+    1, 0.0845, 0.1118, 0.1190, 0.0059 ];
+
+good_CA_IDs = CA_IDs(fraction_missing_vec < 0.05);
+
+for i = 1:length(good_CA_IDs)
+    id = good_CA_IDs{i}
+    load(['LL_',id,'.mat']);
+    seasonal_LL_mean = mean(LL_sim,1);
+    seasonal_LL_std = std(LL_sim,0,1);
+    
+    LL_sim_standardized = (LL_sim - repmat(seasonal_LL_mean,[size(LL_sim,1),1])) ...
+        ./ repmat(seasonal_LL_std,[size(LL_sim,1),1]);
+    LL_obs_standardized = (LL_obs - repmat(seasonal_LL_mean,[size(LL_obs,1),1])) ...
+        ./ repmat(seasonal_LL_std,[size(LL_obs,1),1]);
+    
+
+end
 
 %% Let's do some GMM fitting!
 
