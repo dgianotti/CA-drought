@@ -39,6 +39,18 @@ occ_mod = load_stn_data(stn_id,'SelectedAICMod');
 
 for day = 1:365
     day
+    
+    % Now we need to make a PMF for every day of the data. The intensity
+    % probabilities will be scaled by 1-p_occ_today, and p_occ_today will
+    % be added to the smallest bin.
+    % We'll make the PMFs as 3D arrays [n_years x 365 x n_bins].
+    n_bins = 10000;
+    bin_edges = linspace(0,max_precip,n_bins+1);
+    
+    % Maybe convert the data to be bin number (integers)
+    
+    
+    
     % Shift the data so that 5-day history is columns 1-5, today is column
     % 6 (we'll need to throw out year 1):
     shifted_data = ShiftXdays(data, 6 - day);
@@ -48,13 +60,7 @@ for day = 1:365
     % Probability of occurrence today
     p_occ_today = get_prob_occurrence( (history>0), occ_mod.trans_probs{day});
   
-    % Now we need to make a PMF for every day of the data. The intensity
-    % probabilities will be scaled by 1-p_occ_today, and p_occ_today will
-    % be added to the smallest bin.
-    % We'll make the PMFs as 3D arrays [n_years x 365 x n_bins].
-
-    n_bins = 10000;
-    bin_edges = linspace(0,max_precip,n_bins+1);
+    
     
     
     
@@ -63,7 +69,19 @@ for day = 1:365
     int_chain_order = log2(size(best_params{day},2));
     switch int_chain_order
         case 0
-            LL_int(:,day) = assign_LL_int(todays_rain, best_params{day});
+            % Make PMF using parameters:
+            
+            % Add in the occurrence probabilities:
+            
+            % Make sure PMF sums to 1:
+            
+            
+            % Get CDF using cumsum:
+            
+            % Transform to normal using inverse normal CDF:
+            LL = 
+            
+            
         case 1 
             params = best_params{day};
             rained_yesterday = (history(:,5) > 1);
