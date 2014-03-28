@@ -75,12 +75,12 @@ for i = 1:length(good_CA_IDs)
     data = [ImpStn.intensity_data; reshape(nan_padded_new_data,[365,5])'];
         
     start_year = 2010 - ImpStn.num_years;
-    [LL_obs, years] = get_daily_log_likelihood(id, data, start_year);
+    [LL_obs, years] = get_daily_log_likelihood_std_normal(id, data, start_year);
     
     % Now sim data!
     SimStn = load_stn_data(id,'SimStn');        
 
-    [LL_sim, ~] = get_daily_log_likelihood(id, SimStn.intensity_data, start_year);
+    [LL_sim, ~] = get_daily_log_likelihood_std_normal(id, SimStn.intensity_data, start_year);
     save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','years');
     
 end 

@@ -1,4 +1,4 @@
-function [LL, years, occ_frac] = get_daily_log_likelihood_std_normal(stn_id, data, start_year)
+function [LL_std_norm, years] = get_daily_log_likelihood_std_normal(stn_id, data, start_year)
 % The function get_daily_log_likelihood determines the log likelihood of
 % the data (input 2) given the Climate-Stationary Weather Model (CSWM) for
 % station id. Inputs are:
@@ -36,82 +36,74 @@ load(int_model_path);
 % load the occ model data:
 occ_mod = load_stn_data(stn_id,'SelectedAICMod');
 
+addpath('C:\Users\gianotti\Documents\IntensityLib');
+
+LL_std_norm = zeros(size(data,1),365);
 
 for day = 1:365
-    day
-    
-    % Now we need to make a PMF for every day of the data. The intensity
-    % probabilities will be scaled by 1-p_occ_today, and p_occ_today will
-    % be added to the smallest bin.
-    % We'll make the PMFs as 3D arrays [n_years x 365 x n_bins].
-    n_bins = 10000;
-    bin_edges = linspace(0,max_precip,n_bins+1);
-    
-    % Maybe convert the data to be bin number (integers)
-    
-    
+    fprintf('%i\n',day);
+
+    occ_chain_order = occ_mod.selected_orders(day);
+    int_chain_order = log2(size(best_params{day},2));
     
     % Shift the data so that 5-day history is columns 1-5, today is column
     % 6 (we'll need to throw out year 1):
     shifted_data = ShiftXdays(data, 6 - day);
+
+    missing_data = isnan(shifted_data);
+    % Set missing data = 0, then we need to fix it at the end
+    shifted_data(missing_data) = 0;
+
     history = shifted_data(:,1:5);
     todays_rain = shifted_data(:,6);
-  
+    
     % Probability of occurrence today
     p_occ_today = get_prob_occurrence( (history>0), occ_mod.trans_probs{day});
   
-    
-    
-    
-    
+    cdfs = zeros(size(todays_rain));
+       
+    params = best_params{day};
     
     % Assign LL for intensity     
-    int_chain_order = log2(size(best_params{day},2));
     switch int_chain_order
         case 0
-            % Make PMF using parameters:
-            
-            % Add in the occurrence probabilities:
-            
-            % Make sure PMF sums to 1:
-            
-            
-            % Get CDF using cumsum:
-            
-            % Transform to normal using inverse normal CDF:
-            LL = 
-            
-            
+            cdfs(todays_rain == 0) = 1 - p_occ_today(todays_rain == 0);
+            cdfs(todays_rain > 0) = 1 - p_occ_today(todays_rain > 0)...
+                + p_occ_today(todays_rain > 0).* mixgamcdf(todays_rain(todays_rain > 0),params);                        
         case 1 
-            params = best_params{day};
             rained_yesterday = (history(:,5) > 1);
-            no_rain_yesterday = (history(:,5) == 0); % Need seperate cases due to nans
-            nan_yesterday = isnan(history(:,5));
-            LL_int(rained_yesterday,day) = assign_LL_int(todays_rain(rained_yesterday), params(:,2));
-            LL_int(no_rain_yesterday,day) = assign_LL_int(todays_rain(no_rain_yesterday), params(:,1));
-            LL_int(nan_yesterday,day) = nan;
-
+            
+            % Four cases: rained yesterday and today (11), yesterday but
+            % not today (10), not yesterday but today (01), neither (00):
+            case_11 = rained_yesterday & (todays_rain > 0); % use params(:,2)
+            case_10 = rained_yesterday & (todays_rain == 0); 
+            case_01 = ~rained_yesterday & (todays_rain > 0); % use params(:,1)
+            case_00 = ~rained_yesterday & (todays_rain == 0); 
+            
+            cdfs(case_11) = 1 - p_occ_today(case_11)...
+                + p_occ_today(case_11).* mixgamcdf(todays_rain(case_11),params(:,2));
+            cdfs(case_10) = 1 - p_occ_today(case_10);
+            cdfs(case_01) = 1 - p_occ_today(case_01)...
+                + p_occ_today(case_01).* mixgamcdf(todays_rain(case_01),params(:,1));
+            cdfs(case_00) = 1 - p_occ_today(case_00); 
+            
         otherwise
             error('We need to add cases for higher chain orders still. Aborting!');
     end   
+                   
+    % Transform to normal using inverse normal CDF:
+    LL_std_norm(:,day) = norminv(cdfs,0,1);
+    
+    % Now need to fix missing data:
+    max_chain_order = max(occ_chain_order, int_chain_order);
+    for j = 0:max_chain_order
+        LL_std_norm( missing_data(:,6-j) ) = nan;
+    end
+    
 end
 
-% You can add up the days first, or add the int and occ first, it doesn't
-% matter. We're going to add up the days first so that we can attribute the
-% LL to occ and int appropriately.
-
-% Now add up LL for all days (but exclude the first year):
-LL_occ(1,:) = []; % Throw out first year...
-LL_int(1,:) = [];
-
-% throw out bad data:
-bad_data = (isnan(LL_occ) | isnan(LL_int));
-LL_occ(bad_data) = nan;
-LL_int(bad_data) = nan;
-
-LL = LL_occ + LL_int;
-
-occ_frac = LL_occ ./ LL;
+% remove the first year:
+LL_std_norm(1,:) = [];
 
 
 years = ((start_year+1):(start_year+n_years-1))';
