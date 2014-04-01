@@ -1,92 +1,59 @@
-% Let's get the (current) data for the CA stations!
 
 clear;
 clc;
 
-addpath('C:\Users\gianotti\Documents\IntensityLib');
+addpath('IntensityLib');
 
-load('CA_ids.mat');
-
-fraction_missing_vec = [ 0.2302, 0.3140, 1, 0.2133, 0.4727, ...
-    0.0111, 0.0364, 0.0078, 0.2055, 0.0559, ...
-    0.6050, 0.0013, 0.0124, 0.3296, 0.2581, ...
-    0.1248, 0.0377, 0.0013, 0.2302, 0.0663, ...
-    0.0026, 0.0020, 0.0104, 0.0228, 0.0449, ...
-    0.1990, 0.5379, 0.1586, 0.1944, 0.5879, ...
-    1, 0.0845, 0.1118, 0.1190, 0.0059 ];
-
-good_CA_IDs = CA_IDs(fraction_missing_vec < 0.05);
-    
-
-%% Loop over stations:
-for i = 1:length(good_CA_IDs)
-
-    id = good_CA_IDs{i}
-    % Download the latest USHCN data:
-    url = ['http://www1.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USC00',id,'.dly'];
-    filename = ['GHCN-Daily/',id,'.dly'];
-    urlwrite(url,filename);
-    
-    
-    % Read in fixed-width data:
-    [datenums,precip] = format_GHCN_precip_data(filename,'PadFirstLastYears','ExcludeLeapDays');
-
-    %     % Set last day to to:
-    %     feb28_2014 = datenum('2014-02-28','yyyy-mm-dd');
-    %     datenums = [datenums(:); ((datenums(end)+1):feb28_2014)'];
-    %     precip = [precip(:); nan([length(datenums)-length(precip),1])];
-        
-    new_precip = precip(datenums>= datenum('2010-01-01') & datenums<= today);
-    new_datenums = datenums(datenums>= datenum('2010-01-01') & datenums<= today);
-
-    % Determine fraction of data missing since 2010:
-    fraction_missing = sum(isnan(new_precip))/numel(new_precip)
-
-    
-    %if (mod(length(new_precip),365) ~= 0) %uh oh... it should...
-    %error('The new data should be a multiple of 365 days... did you use ExcludeLeapDays in format_GHCN_precip_data\n');
-    %end
+calculate_daily_LL_data;
 
 
-    % Fill missing data values somehow!
-    % Neighboring GHCN sites?
-    missing_data_datenums = new_datenums(isnan(new_precip)) ;
-    
-    % Look up lat/lon in ushcn-stations.txt:
-    [lat, lon] = get_ushcn_lat_lon(id);
-    
-    % Maybe use GSOD:
-    % ftp://ftp.ncdc.noaa.gov/pub/data/gsod
-    
-    % filled_precip = get_precip_GSOD(missing_data_datenums,lat,lon,20);
+%% Use today's DOY as annual start date:
+today_doy = today - datenum(year(today),1,1) + 1;
 
-    % Or NOAA's Quality controlled local climatological data:
-    % http://cdo.ncdc.noaa.gov/qclcd/QCLCD
-    % filled_precip = get_precip_QCLCD(missing_data_datenums,lat,lon);
+load('CA_ids.mat'); % The ids we want are in good_CA_IDs{:}
 
-    % Load old precip data:
-    ImpStn = load_stn_data(id,'ImpStn');
+id = good_CA_IDs{1};
 
-    % Determine likelihood of data given model:
-    
-    nan_padded_new_data = nan(365*5,1);
-    nan_padded_new_data(1:length(new_precip)) = new_precip;
-    
-    data = [ImpStn.intensity_data; reshape(nan_padded_new_data,[365,5])'];
-        
-    start_year = 2010 - ImpStn.num_years;
-    [LL_obs_std_norm,~] = get_daily_log_likelihood_std_normal(id, data, start_year);
-    [LL_obs, years] = get_daily_log_likelihood_std_normal(id, data, start_year);
-    
-    % Now sim data!
-    SimStn = load_stn_data(id,'SimStn');        
+% Load the daily LL data:
+load(['LL_',id,'.mat']); 
 
-    [LL_sim_std_norm, ~] = get_daily_log_likelihood_std_normal(id, SimStn.intensity_data, start_year);
-    [LL_sim, ~] = get_daily_log_likelihood(id, SimStn.intensity_data, start_year);
-    save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','LL_obs_std_norm','LL_sim_std_norm','years');
-    
-end 
-    
+% Now we have LL_obs, LL_sim, LL_obs_std_norm, LL_sim_std_norm, and years
+
+% If you want to use the std_norm versions, uncomment the following:
+% LL_obs = LL_obs_std_norm;
+% LL_sim = LL_sim_std_norm;
+
+% Remove the seasonal cycle as best you can:
+LL_mean = mean(LL_sim,1);
+LL_std = std(LL_sim,0,1);
+LL_obs = (LL_obs - repmat(LL_mean, [size(LL_obs,1),1]))... 
+    ./ repmat(LL_std, [size(LL_obs,1),1]);
+LL_sim = (LL_sim - repmat(LL_mean, [size(LL_sim,1),1]))... 
+    ./ repmat(LL_std, [size(LL_sim,1),1]);
+
+% Okay, now they're a little more Gaussian...
+
+% Calculate the annual LL, with the year begining on today's DOY:
+LL_obs_shifted = ShiftXdays(LL_obs,1-today_doy);
+LL_obs_shifted(end) = []; % This one has both the incomplete first year and the NaNs from the end of this year.
+LL_sim_shifted = ShiftXdays(LL_sim,1-today_doy);
+LL_sim_shifted(end) = [];
+years(1) = [];
+
+% Now we have to turn the sim data into an integer multiple of the obs
+% data, and make sure that it has nans in the same place:
+n_years = size(LL_obs_shifted,1);
+n_sims = floor(size(LL_sim,1)/n_years);
+LL_sim_shifted( (n_years*n_sims+1):end, : ) = [];
+obs_nans = isnan(LL_obs_shifted);
+LL_sim_shifted( repmat(obs_nans,[n_sims,1]) ) = nan;
+
+LL_obs_annual = nanmean(LL_obs_shifted,2); % n_years x 1
+LL_sim_annual = reshape(nanmean(LL_sim_shifted,2), [n_years,n_sims]); % As an n_years x n_sims matrix
+
+% Convert the sim to a normal distribution using order statistics:
+
+
 
 %% Make annual plots!
     
