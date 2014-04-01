@@ -1,0 +1,8 @@
+*.mat
+*.dly
+*.png
+QCLCD/
+StnFiles/
+*.gz
+USHCN-CA-through2012/
+
