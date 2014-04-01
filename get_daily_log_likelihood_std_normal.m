@@ -93,8 +93,7 @@ for day = 1:365
                    
     % Transform to normal using inverse normal CDF:
     LL_std_norm(:,day) = log(normpdf(norminv(cdfs,0,1),0,1)); % norminv(cdfs) is a precip equivalent, normlike(norminv(cdfs)) is -LL
-    
-    
+     
     % Now need to fix missing data:
     max_chain_order = max(occ_chain_order, int_chain_order);
     for j = 0:max_chain_order
