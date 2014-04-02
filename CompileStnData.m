@@ -52,6 +52,13 @@ LL_obs_annual = nanmean(LL_obs_shifted,2); % n_years x 1
 LL_sim_annual = reshape(nanmean(LL_sim_shifted,2), [n_years,n_sims]); % As an n_years x n_sims matrix
 
 % Convert the sim to a normal distribution using order statistics:
+[std_norm_pdfs_sim, uniform_pdfs_sim, ~] = empirical_2_normal_via_order_stats(LL_sim_annual);
+
+% Figure out where each obs value would fit into the sim ranking, and
+% interpolate:
+
+
+
 
 
 

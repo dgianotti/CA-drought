@@ -13,13 +13,14 @@ N = J*K; % total number of entries
 
 X = X(:); % Work with it as a vector, then reshape at the end
 
-[X_sorted,rank] = sort(X);
+[X_sorted,ranks] = sort(X);
 
 order_stats_sorted = (1:N)/(N+1); % These are the most likely values for a uniform variable
-uniform_pdf_vals = reshape(order_stats_sorted(rank),[J,K]);
+uniform_pdf_vals = reshape(order_stats_sorted(ranks),[J,K]);
 
 std_norm_pdf_vals = norminv(uniform_pdf_vals,0,1); 
 
 
-rank = reshape(rank,[J,K]);
+ranks = reshape(ranks,[J,K]);
  
+end % function
