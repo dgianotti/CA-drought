@@ -2,7 +2,12 @@
 clear;
 clc;
 
-addpath('IntensityLib');
+if strcmpi(getenv('OS'),'Windows_NT')
+    addpath('C:\Users\gianotti\Documents\IntensityLib\')
+else % linux
+    addpath('IntensityLib');
+end
+
 
 %% Download and calculate all of the LL data:
 calculate_daily_LL_data;
@@ -23,6 +28,7 @@ load(['LL_',id,'.mat']);
 % If you want to use the std_norm versions, uncomment the following:
 % LL_obs = LL_obs_std_norm;
 % LL_sim = LL_sim_std_norm;
+clear LL_sim_std_norm LL_obs_std_norm;
 
 % Remove the seasonal cycle as best you can:
 LL_mean = mean(LL_sim,1);
@@ -36,9 +42,9 @@ LL_sim = (LL_sim - repmat(LL_mean, [size(LL_sim,1),1]))...
 
 % Calculate the annual LL, with the year begining on today's DOY:
 LL_obs_shifted = ShiftXdays(LL_obs,1-today_doy);
-LL_obs_shifted(end) = []; % This one has both the incomplete first year and the NaNs from the end of this year.
+LL_obs_shifted(end,:) = []; % This one has both the incomplete first year and the NaNs from the end of this year.
 LL_sim_shifted = ShiftXdays(LL_sim,1-today_doy);
-LL_sim_shifted(end) = [];
+LL_sim_shifted(end,:) = [];
 years(1) = [];
 
 % Now we have to turn the sim data into an integer multiple of the obs
