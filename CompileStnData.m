@@ -14,11 +14,14 @@ calculate_daily_LL_data;
 
 
 %% Use today's DOY as annual start date:
-today_doy = today - datenum(year(today),1,1) + 1;
+%today_doy = today - datenum(year(today),1,1) + 1;
+today_doy = 1; % Jan1
 
 load('CA_ids.mat'); % The ids we want are in good_CA_IDs{:}
 
-id = good_CA_IDs{1};
+for i = 1:13
+id = good_CA_IDs{i};
+fprintf('%d: %s\n',i,id);
 
 % Load the daily LL data:
 load(['LL_',id,'.mat']); 
@@ -26,8 +29,8 @@ load(['LL_',id,'.mat']);
 % Now we have LL_obs, LL_sim, LL_obs_std_norm, LL_sim_std_norm, and years
 
 % If you want to use the std_norm versions, uncomment the following:
-% LL_obs = LL_obs_std_norm;
-% LL_sim = LL_sim_std_norm;
+LL_obs = LL_obs_std_norm;
+LL_sim = LL_sim_std_norm;
 clear LL_sim_std_norm LL_obs_std_norm;
 
 % Remove the seasonal cycle as best you can:
@@ -66,12 +69,25 @@ LL_sim_annual = reshape(nanmean(LL_sim_shifted,2), [n_years,n_sims]); % As an n_
 std_norm_pdfs_obs = sim_dist_to_obs_std_norm(LL_obs_annual, LL_sim_annual, ...
     uniform_pdfs_sim);
 
-plot(years,quantile(std_norm_pdfs_sim,[.025,.5,.975],2),'-r');
+
+subplot(3,5,i);
+plot(years,quantile(LL_sim_annual,[.025,.5,.975],2),'-r');
 hold on;
-plot(years,std_norm_pdfs_obs,'-b')
+plot(years,LL_obs_annual,'-b');
+xlim([10*floor(min(years/10)),2020]);
+title(id);
+set(gca,'XTick',1900:50:2000);
 
 
-
+% subplot(3,5,i);
+% plot(years,quantile(std_norm_pdfs_sim,[.025,.5,.975],2),'-r');
+% hold on;
+% plot(years,std_norm_pdfs_obs,'-b');
+% xlim([10*floor(min(years/10)),2020]);
+% title(id);
+% set(gca,'XTick',[1900:50:2000]);
+end
+%print(gcf,'-dpdf','AprToApr_not_normalized.pdf');
 
 %% Make annual plots!
     
