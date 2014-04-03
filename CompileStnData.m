@@ -61,11 +61,14 @@ LL_sim_annual = reshape(nanmean(LL_sim_shifted,2), [n_years,n_sims]); % As an n_
 % Convert the sim to a normal distribution using order statistics:
 [std_norm_pdfs_sim, uniform_pdfs_sim, ~] = empirical_2_normal_via_order_stats(LL_sim_annual);
 
-% Get the std_normal values for the obs using the sim stransform as a
+% Get the std_normal values for the obs using the sim transform as a
 % look-up table:
 std_norm_pdfs_obs = sim_dist_to_obs_std_norm(LL_obs_annual, LL_sim_annual, ...
     uniform_pdfs_sim);
 
+plot(years,quantile(std_norm_pdfs_sim,[.025,.5,.975],2),'-r');
+hold on;
+plot(years,std_norm_pdfs_obs,'-b')
 
 
 

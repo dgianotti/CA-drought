@@ -26,7 +26,7 @@ fraction_missing_vec = [ 0.2302, 0.3140, 1, 0.2133, 0.4727, ...
 
 good_CA_IDs = CA_IDs(fraction_missing_vec < 0.05);
 
-save('CA_ids.mat','CA_IDs','good_CA_IDs');
+% save('CA_ids.mat','CA_IDs','good_CA_IDs');
 
 % Loop over stations:
 for i = 1:length(good_CA_IDs)
@@ -72,7 +72,7 @@ for i = 1:length(good_CA_IDs)
     start_year = 2010 - ImpStn.num_years;
     fprintf('Calculating daily observed LL for station %s...\n',id);
     [LL_obs_std_norm,~] = get_daily_log_likelihood_std_normal(id, data, start_year);
-    [LL_obs, years] = get_daily_log_likelihood_std_normal(id, data, start_year);
+    [LL_obs, years] = get_daily_log_likelihood(id, data, start_year);
     
     % Now sim data!
     SimStn = load_stn_data(id,'SimStn');        
