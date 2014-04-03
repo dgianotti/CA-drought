@@ -16,12 +16,16 @@ today_doy = 1; % Jan1
 id = 'synthetic';
 
 % Make the daily precip data:
-obs_params_1 = [0.3, .5, 3.5]; % p_occ, gamma_1, gamma_2
-obs_params_2 = [0.1, 2,2];
+% obs_params_1 = [0.3, .5, 3.5]; % p_occ, gamma_1, gamma_2
+% obs_params_2 = [0.1, 2,2];
+
+obs_params_1 = [0.3, 5, 2]; % p_occ, gamma_1, gamma_2
+obs_params_2 = [0.1, 2, 15];
+
     
 
-obs1 = 30*gamrnd(obs_params_1(2),obs_params_1(3),[60,365]) .* (rand(60,365) < obs_params_1(1));
-obs2 = 6*gamrnd(obs_params_2(2),obs_params_2(3),[40,365]) .* (rand(40,365) < obs_params_2(1));
+obs1 = gamrnd(obs_params_1(2),obs_params_1(3),[60,365]) .* (rand(60,365) < obs_params_1(1));
+obs2 = gamrnd(obs_params_2(2),obs_params_2(3),[40,365]) .* (rand(40,365) < obs_params_2(1));
 obs_precip = [obs1;obs2];
 
 % Get synthetic model params:
@@ -100,4 +104,14 @@ xlim([10*floor(min(years/10)),2020]);
 title(id);
 set(gca,'XTick',1900:50:2000);
 
-print(gcf,'-dpdf','synthetic_LL_normalized.pdf');
+print(gcf,'-dpdf','synthetic_AnnualNorm.pdf');
+
+figure;
+plot(years,quantile(LL_sim_annual,[.025,.5,.975],2),'-r');
+hold on;
+plot(years,LL_obs_annual,'-b');
+xlim([10*floor(min(years/10)),2020]);
+title(id);
+set(gca,'XTick',1900:50:2000);
+
+print(gcf,'-dpdf','synthetic_DailyNorm_NoAnnualNorm.pdf');

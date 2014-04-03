@@ -14,8 +14,8 @@ calculate_daily_LL_data;
 
 
 %% Use today's DOY as annual start date:
-%today_doy = today - datenum(year(today),1,1) + 1;
-today_doy = 1; % Jan1
+today_doy = today - datenum(year(today),1,1) + 1;
+%today_doy = 1; % Jan1
 
 load('CA_ids.mat'); % The ids we want are in good_CA_IDs{:}
 
@@ -87,7 +87,7 @@ set(gca,'XTick',1900:50:2000);
 % title(id);
 % set(gca,'XTick',[1900:50:2000]);
 end
-%print(gcf,'-dpdf','AprToApr_not_normalized.pdf');
+print(gcf,'-dpdf','DailyNorm_AnnualNotNorm_Apr2Apr.pdf');
 
 %% Make annual plots!
     
