@@ -4,6 +4,7 @@ clc;
 
 addpath('IntensityLib');
 
+%% Download and calculate all of the LL data:
 calculate_daily_LL_data;
 
 
@@ -54,9 +55,10 @@ LL_sim_annual = reshape(nanmean(LL_sim_shifted,2), [n_years,n_sims]); % As an n_
 % Convert the sim to a normal distribution using order statistics:
 [std_norm_pdfs_sim, uniform_pdfs_sim, ~] = empirical_2_normal_via_order_stats(LL_sim_annual);
 
-% Figure out where each obs value would fit into the sim ranking, and
-% interpolate:
-
+% Get the std_normal values for the obs using the sim stransform as a
+% look-up table:
+std_norm_pdfs_obs = sim_dist_to_obs_std_norm(LL_obs_annual, LL_sim_annual, ...
+    uniform_pdfs_sim);
 
 
 
