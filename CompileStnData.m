@@ -12,54 +12,34 @@ end
 %% Download and calculate all of the LL data:
 calculate_daily_LL_data;
 
+%% Create different accumulated LL time series (each gets saved with the 
+% daily LL data for that stn).
 
-%% Use today's DOY as annual start date:
+% Delete old accumulated data files:
+delete('*accum_DOY*.mat');
+
 today_doy = today - datenum(year(today),1,1) + 1;
-%today_doy = 1; % Jan1
+remove_seasonal_cycle = false;
 
-load('CA_ids.mat'); % The ids we want are in good_CA_IDs{:}
+accumulate_LL({'oneyear','twoyear','threeyear'},today_doy,remove_seasonal_cycle);
+accumulate_LL({'oneyear','twoyear','threeyear'},1,remove_seasonal_cycle);
 
-for i = 1:13
-id = good_CA_IDs{i};
-fprintf('%d: %s\n',i,id);
 
-% Load the daily LL data:
-load(['LL_',id,'.mat']); 
+%% Transform the annualized (or bi-annualized, etc.) data to be more normal 
+% using the sim distribution
 
-% Now we have LL_obs, LL_sim, LL_obs_std_norm, LL_sim_std_norm, and years
+cdf_transform_accum_data();
 
-% If you want to use the std_norm versions, uncomment the following:
-LL_obs = LL_obs_std_norm;
-LL_sim = LL_sim_std_norm;
-clear LL_sim_std_norm LL_obs_std_norm;
 
-% Remove the seasonal cycle as best you can:
-LL_mean = mean(LL_sim,1);
-LL_std = std(LL_sim,0,1);
-LL_obs = (LL_obs - repmat(LL_mean, [size(LL_obs,1),1]))... 
-    ./ repmat(LL_std, [size(LL_obs,1),1]);
-LL_sim = (LL_sim - repmat(LL_mean, [size(LL_sim,1),1]))... 
-    ./ repmat(LL_std, [size(LL_sim,1),1]);
+%% Cluster the obs data and make some plots:
 
-% Okay, now they're a little more Gaussian...
+make_accumlated_cluster_plots(1);
+make_accumlated_cluster_plots(today_doy);
 
-% Calculate the annual LL, with the year begining on today's DOY:
-LL_obs_shifted = ShiftXdays(LL_obs,1-today_doy);
-LL_obs_shifted(end,:) = []; % This one has both the incomplete first year and the NaNs from the end of this year.
-LL_sim_shifted = ShiftXdays(LL_sim,1-today_doy);
-LL_sim_shifted(end,:) = [];
-years(1) = [];
 
-% Now we have to turn the sim data into an integer multiple of the obs
-% data, and make sure that it has nans in the same place:
-n_years = size(LL_obs_shifted,1);
-n_sims = floor(size(LL_sim,1)/n_years);
-LL_sim_shifted( (n_years*n_sims+1):end, : ) = [];
-obs_nans = isnan(LL_obs_shifted);
-LL_sim_shifted( repmat(obs_nans,[n_sims,1]) ) = nan;
 
-LL_obs_annual = nanmean(LL_obs_shifted,2); % n_years x 1
-LL_sim_annual = reshape(nanmean(LL_sim_shifted,2), [n_years,n_sims]); % As an n_years x n_sims matrix
+
+%%
 
 % Convert the sim to a normal distribution using order statistics:
 [std_norm_pdfs_sim, uniform_pdfs_sim, ~] = empirical_2_normal_via_order_stats(LL_sim_annual);
@@ -191,38 +171,6 @@ for i = 1:length(good_CA_IDs)
 end
 
 
-%% Now, since there is obviously a seasonal cycle of LL, let's remove it 
-% so that we can compare across different time periods:
-clear;
-clc;
-
-addpath('C:\Users\gianotti\Documents\IntensityLib');
-
-load('CA_ids.mat');
-
-fraction_missing_vec = [ 0.2302, 0.3140, 1, 0.2133, 0.4727, ...
-    0.0111, 0.0364, 0.0078, 0.2055, 0.0559, ...
-    0.6050, 0.0013, 0.0124, 0.3296, 0.2581, ...
-    0.1248, 0.0377, 0.0013, 0.2302, 0.0663, ...
-    0.0026, 0.0020, 0.0104, 0.0228, 0.0449, ...
-    0.1990, 0.5379, 0.1586, 0.1944, 0.5879, ...
-    1, 0.0845, 0.1118, 0.1190, 0.0059 ];
-
-good_CA_IDs = CA_IDs(fraction_missing_vec < 0.05);
-
-for i = 1:length(good_CA_IDs)
-    id = good_CA_IDs{i}
-    load(['LL_',id,'.mat']);
-    seasonal_LL_mean = mean(LL_sim,1);
-    seasonal_LL_std = std(LL_sim,0,1);
-    
-    LL_sim_standardized = (LL_sim - repmat(seasonal_LL_mean,[size(LL_sim,1),1])) ...
-        ./ repmat(seasonal_LL_std,[size(LL_sim,1),1]);
-    LL_obs_standardized = (LL_obs - repmat(seasonal_LL_mean,[size(LL_obs,1),1])) ...
-        ./ repmat(seasonal_LL_std,[size(LL_obs,1),1]);
-    
-
-end
 
 %% Let's do some GMM fitting!
 

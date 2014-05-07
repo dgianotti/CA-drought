@@ -1,17 +1,16 @@
+function [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(LL_obs, LL_sim)
+% The function GMM_cluster takes two arguments, LL_obs and LL_sim, and
+% clusters the LL_obs values according to a Gaussian mixture model with
+% between 1-3 components (selected by BIC). 
 
-% We want this to eventually be a function that takes LL_obs, LL_sim and
-% returns the optimal GMM clustering
-
-clear;
-clc;
-load('LL_046730.mat');
+if ~isvector(LL_obs)
+    error('LL_obs should be a vector (hopefully with about 100 elements). Aborting!');
+end
 
 N = length(LL_obs);
 
-
 % Sort the obs values:
-obs_sorted = sort(LL_obs);
-
+[obs_sorted, sort_idx] = sortrows(LL_obs(:));
 
 % Determine all possible GMM groupings with 1, 2, or 3 clusters (requiring
 % monotonicity):
@@ -19,16 +18,16 @@ mu_hat = zeros(3,1);
 sigma_hat = zeros(3,1);
 
 clusters_best = ones(N,1);
-k = 2; % just a single mean and variance
+%k = 2; % just a single mean and variance
 
-mu_hat(1) = mean(obs_sorted(clusters_best == 1));
-sigma_hat(1) = std(obs_sorted(clusters_best == 1));
-weights = [sum(clusters_best == 1), sum(clusters_best == 2), ...
-    sum(clusters_best == 3)]/N;
+%mu_hat(1) = mean(obs_sorted(clusters_best == 1));
+%sigma_hat(1) = std(obs_sorted(clusters_best == 1));
+%weights = [sum(clusters_best == 1), sum(clusters_best == 2), ...
+%    sum(clusters_best == 3)]/N;
 
-L = nansum(log( weights(1)*normpdf(obs_sorted, mu_hat(1), sigma_hat(1))...
-    + weights(2)*normpdf(obs_sorted, mu_hat(2), sigma_hat(2))...
-    + weights(3)*normpdf(obs_sorted, mu_hat(3), sigma_hat(3)) ));
+%L = nansum(log( weights(1)*normpdf(obs_sorted, mu_hat(1), sigma_hat(1))...
+%    + weights(2)*normpdf(obs_sorted, mu_hat(2), sigma_hat(2))...
+%    + weights(3)*normpdf(obs_sorted, mu_hat(3), sigma_hat(3)) ));
 
 
 % BIC_best = -2*L + k*(log(N)+log(2*pi));
@@ -94,18 +93,26 @@ weights = [sum(clusters_best == 1), sum(clusters_best == 2), ...
     sum(clusters_best == 3)]/N;
 
 
-hist(clusters_best)
 figure;
-ksdensity(LL_obs)
-figure
+subplot(2,3,[1,4]);
+hist(clusters_best)
+title('Histogram of cluster assignments');
+subplot(2,3,2:3);
+ksdensity(LL_obs);
+title('ksdensity of LL_{obs}');
+subplot(2,3,5:6);
 x = floor(min([LL_sim(:);LL_obs(:)])):.01:ceil(max([LL_sim(:);LL_obs(:)]));
 y = weights(1)*normpdf(x, mu_hat(1), sigma_hat(1))...
             + weights(2)*normpdf(x, mu_hat(2), sigma_hat(2))...
             + weights(3)*normpdf(x, mu_hat(3), sigma_hat(3));
 plot(x,y);
+title('Assigned cluster PDFs');
 
-% Unsort the obs values and cluster vector, and return the unsroted
+% Unsort the obs values and cluster vector, and return the unsorted
 % clusters, mean vector, std vector, and weights.
 
+tmp = sortrows([sort_idx,clusters_best(:)],1);
+clusters = tmp(:,2);
 
+end % function
 
