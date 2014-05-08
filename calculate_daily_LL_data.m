@@ -67,12 +67,12 @@ for i = 1:length(good_CA_IDs)
     nan_padded_new_data = nan(365*5,1);
     nan_padded_new_data(1:length(new_precip)) = new_precip;
     
-    data = [ImpStn.intensity_data; reshape(nan_padded_new_data,[365,5])'];
+    precip_obs = [ImpStn.intensity_data; reshape(nan_padded_new_data,[365,5])'];
         
     start_year = 2010 - ImpStn.num_years;
     fprintf('Calculating daily observed LL for station %s...\n',id);
     %[LL_obs_std_norm,~] = get_daily_log_likelihood_std_normal(id, data, start_year);
-    [LL_obs, years] = get_daily_log_likelihood(id, data, start_year);
+    [LL_obs, years] = get_daily_log_likelihood(id, precip_obs, start_year);
     
     % Now sim data!
     SimStn = load_stn_data(id,'SimStn');        
@@ -81,6 +81,8 @@ for i = 1:length(good_CA_IDs)
     %[LL_sim_std_norm, ~] = get_daily_log_likelihood_std_normal(id, SimStn.intensity_data, start_year);
     [LL_sim, ~] = get_daily_log_likelihood(id, SimStn.intensity_data, start_year);
     %save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','LL_obs_std_norm','LL_sim_std_norm','years');
-    save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','years');
+    
+    save(sprintf('LL_%s.mat',id),'LL_obs','LL_sim','years','precip_obs');
+    
     
 end 

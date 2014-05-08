@@ -8,6 +8,8 @@ else % linux
     addpath('IntensityLib');
 end
 
+today_doy = today - datenum(year(today),1,1) + 1;
+remove_seasonal_cycle = false;
 
 %% Download and calculate all of the LL data:
 calculate_daily_LL_data;
@@ -17,26 +19,46 @@ calculate_daily_LL_data;
 
 % Delete old accumulated data files:
 delete('*accum_DOY*.mat');
-
-today_doy = today - datenum(year(today),1,1) + 1;
-remove_seasonal_cycle = false;
-
 accumulate_LL({'oneyear','twoyear','threeyear'},today_doy,remove_seasonal_cycle);
 accumulate_LL({'oneyear','twoyear','threeyear'},1,remove_seasonal_cycle);
 
-
-%% Transform the annualized (or bi-annualized, etc.) data to be more normal 
+% Transform the annualized (or bi-annualized, etc.) data to be more normal 
 % using the sim distribution
+cdf_transform_accum_LL_data();
 
-cdf_transform_accum_data();
+% Cluster the obs data and make some plots:
+make_accumlated_cluster_plots_LL(1);
+make_accumlated_cluster_plots_LL(today_doy);
 
+%% Now do the same thing for total precipitation and occurrence instead of LL:
 
-%% Cluster the obs data and make some plots:
+accumulate_precip({'oneyear','twoyear','threeyear'},today_doy,remove_seasonal_cycle);
+accumulate_precip({'oneyear','twoyear','threeyear'},1,remove_seasonal_cycle);
 
+% Transform the annualized (or bi-annualized, etc.) data to be more normal 
+% using the sim distribution
+cdf_transform_accum_precip_data();
+
+% Cluster the obs data and make some plots:
 make_accumlated_cluster_plots(1);
 make_accumlated_cluster_plots(today_doy);
 
+% Make annual LL/precip scatter plots and seasonal time-series:
+make_annual_LL_precip_plots;
 
+%% Try a comparison between May 1 start date with and without May-Oct precip:
+may1 = 121;
+oct31 = 304;
+accumulate_LL({'oneyear','twoyear','threeyear'},may1,0);
+accumulate_precip({'oneyear','twoyear','threeyear'},may1,0);
+
+accumulate_precip_wet_season_only({'oneyear','twoyear','threeyear'},may1,0);
+accumulate_LL_wet_season_only({'oneyear','twoyear','threeyear'},may1,0);
+
+cdf_transform_accum_LL_data;
+cdf_transform_accum_precip_data;
+
+make_accumulated_cluster_plots_wet_season(may1);
 
 
 %%
@@ -121,54 +143,6 @@ end
 % 
 % print(gcf,'-dpng','LL_vs_precip.png');
 
-
-%% Plot annual cycle of precip and LL at each station:
-
-
-for i = 1:length(good_CA_IDs)
-    figure;
-    id = good_CA_IDs{i}
-    load(['LL_',id,'.mat']);
-    SimStn = load_stn_data(id,'SimStn');
-    ImpStn = load_stn_data(id,'ImpStn');
-    subplot(2,2,1);
-    sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
-   
-    obs_precip = ImpStn.intensity_data; % Ignoring new (post 2010) data for now...
-    LL_obs = LL_obs(1:size(obs_precip,1),:);
-    
-    plot(1:365,mean(sim_precip,1),'-r');
-    hold on;
-    plot(1:365,mean(obs_precip,1),'-b');
-    xlabel('Day of Year');
-    xlim([1,365]);
-    ylabel('Mean Daily Precip. [mm]');
-    legend({'Sim','Obs'});
-    title(id);
-    
-    subplot(2,2,3);
-    plot(1:365,mean(LL_sim,1),'-r');
-    hold on;
-    plot(1:365,nanmean(LL_obs,1),'-b');
-    xlabel('Day of Year');
-    xlim([1,365]);
-    ylabel('Mean Daily LL');
-    legend({'Sim','Obs'});
-
-    subplot(2,2,[2,4]);
-    sim_precip = SimStn.intensity_data(1:size(LL_sim,1),:);
-    obs_precip = ImpStn.intensity_data(1:size(LL_obs,1),:);
-    plot(sim_precip(:),LL_sim(:),'.r');
-    hold on;
-    plot(obs_precip(:),LL_obs(:),'.b');        
-    xlabel('Precipitation [mm]');
-    ylabel('Log-Likelihood');
-    legend({'Sim','Obs'});
-    
-    print(gcf,'-dpng',sprintf('Seasonal_precip_LL_%s.png',id));
-    close all;
-    
-end
 
 
 
