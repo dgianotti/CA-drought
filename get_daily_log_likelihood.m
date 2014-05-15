@@ -41,7 +41,7 @@ occ_mod = load_stn_data(stn_id,'SelectedAICMod');
 
 
 for day = 1:365
-    day
+    disp(day);
     % Shift the data so that 5-day history is columns 1-5, today is column
     % 6 (we'll need to throw out year 1):
     shifted_data = ShiftXdays(data, 6 - day);

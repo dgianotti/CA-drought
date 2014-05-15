@@ -16,16 +16,16 @@ function calculate_daily_LL_data()
 
 load('CA_ids.mat');
 
-fraction_missing_vec = [ 0.2302, 0.3140, 1, 0.2133, 0.4727, ...
-    0.0111, 0.0364, 0.0078, 0.2055, 0.0559, ...
-    0.6050, 0.0013, 0.0124, 0.3296, 0.2581, ...
-    0.1248, 0.0377, 0.0013, 0.2302, 0.0663, ...
-    0.0026, 0.0020, 0.0104, 0.0228, 0.0449, ...
-    0.1990, 0.5379, 0.1586, 0.1944, 0.5879, ...
-    1, 0.0845, 0.1118, 0.1190, 0.0059 ];
-
-good_CA_IDs = CA_IDs(fraction_missing_vec < 0.05);
-
+% fraction_missing_vec = [ 0.2302, 0.3140, 1, 0.2133, 0.4727, ...
+%     0.0111, 0.0364, 0.0078, 0.2055, 0.0559, ...
+%     0.6050, 0.0013, 0.0124, 0.3296, 0.2581, ...
+%     0.1248, 0.0377, 0.0013, 0.2302, 0.0663, ...
+%     0.0026, 0.0020, 0.0104, 0.0228, 0.0449, ...
+%     0.1990, 0.5379, 0.1586, 0.1944, 0.5879, ...
+%     1, 0.0845, 0.1118, 0.1190, 0.0059 ];
+% 
+% good_CA_IDs = CA_IDs(fraction_missing_vec < 0.05);
+% 
 % save('CA_ids.mat','CA_IDs','good_CA_IDs');
 
 % Loop over stations:
@@ -70,9 +70,19 @@ for i = 1:length(good_CA_IDs)
     precip_obs = [ImpStn.intensity_data; reshape(nan_padded_new_data,[365,5])'];
         
     start_year = 2010 - ImpStn.num_years;
+
+    % Station 044890 has a weird first year. Throw away:
+    if strcmp(id,'044890');
+        precip_obs(1,:) = [];
+        start_year = start_year+1;
+    end
+
     fprintf('Calculating daily observed LL for station %s...\n',id);
     %[LL_obs_std_norm,~] = get_daily_log_likelihood_std_normal(id, data, start_year);
     [LL_obs, years] = get_daily_log_likelihood(id, precip_obs, start_year);
+    
+    
+    
     
     % Now sim data!
     SimStn = load_stn_data(id,'SimStn');        

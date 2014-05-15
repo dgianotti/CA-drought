@@ -1,0 +1,10 @@
+
+Re-run model with infinitesimal (PDF) likelihoods
+
+Make quantile/quantile plot
+
+
+** Paper:
+Find out about reservoir management
+Reference mountain uplift due to water withdrawls in central valley (Amos, Audit, et al. in Nature 2014)
+

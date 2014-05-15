@@ -26,7 +26,7 @@ for i = 1:length(good_CA_IDs)
     end
     
     figure;
-    subplot(3,5,1:4);
+    subplot(3,6,1:4);
     plot(years, -LL_obs_1yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), -LL_obs_1yr_stdnorm(clusters == 1),'ob',...
@@ -39,18 +39,25 @@ for i = 1:length(good_CA_IDs)
     title(sprintf('Stn #%s: 1-yearly, Start DOY = %i',stn_id,DOY));
     ylabel('-Log-Likelihood');
     
-    subplot(3,5,5);
+    subplot(3,6,5);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),-y,'-b');
     hold on;
     plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),-y,'-k');
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),-y,'-r');
     ylim(ylm);
+    
+    % QQ plot:
+    subplot(3,6,6);
+    qqplot(-LL_sim_1yr_stdnorm(:),-LL_obs_1yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
 
     % % % % % % % % % 
     % Now the precip data:
     [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(precip_obs_1yr_stdnorm, precip_sim_1yr_stdnorm);
-    subplot(3,5,6:9);
+    subplot(3,6,7:10);
     plot(years, precip_obs_1yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), precip_obs_1yr_stdnorm(clusters == 1),'or',...
@@ -62,7 +69,7 @@ for i = 1:length(good_CA_IDs)
     ylm = get(gca,'Ylim');
     ylabel('Total Precipitation');
     
-    subplot(3,5,10);
+    subplot(3,6,11);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
     hold on;
@@ -70,10 +77,17 @@ for i = 1:length(good_CA_IDs)
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
     ylim(ylm);
 
+    % QQ plot:
+    subplot(3,6,12);
+    qqplot(precip_sim_1yr_stdnorm(:),precip_obs_1yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
+    
     % % % % % % % % % 
     % Now the occ data:
     [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(occ_obs_1yr_stdnorm, occ_sim_1yr_stdnorm);
-    subplot(3,5,11:14);
+    subplot(3,6,13:16);
     plot(years, occ_obs_1yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), occ_obs_1yr_stdnorm(clusters == 1),'or',...
@@ -85,7 +99,7 @@ for i = 1:length(good_CA_IDs)
     ylm = get(gca,'Ylim');
     ylabel({'Precipitation','Occurrence'});
     
-    subplot(3,5,15);
+    subplot(3,6,17);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
     hold on;
@@ -93,7 +107,13 @@ for i = 1:length(good_CA_IDs)
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
     ylim(ylm);
     
-      
+    % QQ plot:
+    subplot(3,6,18);
+    qqplot(occ_sim_1yr_stdnorm(:),occ_obs_1yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
+    
     outfilename = sprintf('plots/All_TS_%s_1yr_DOY%i.png',stn_id,DOY);
     print(gcf,'-dpng',outfilename);
     
@@ -111,7 +131,7 @@ for i = 1:length(good_CA_IDs)
     end
     
     figure;
-    subplot(3,5,1:4);
+    subplot(3,6,1:4);
     plot(years, -LL_obs_2yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), -LL_obs_2yr_stdnorm(clusters == 1),'ob',...
@@ -124,7 +144,7 @@ for i = 1:length(good_CA_IDs)
     title(sprintf('Stn #%s: 2-yearly, Start DOY = %i',stn_id,DOY));
     ylabel('-Log-Likelihood');
     
-    subplot(3,5,5);
+    subplot(3,6,5);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),-y,'-b');
     hold on;
@@ -132,10 +152,17 @@ for i = 1:length(good_CA_IDs)
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),-y,'-r');
     ylim(ylm);
     
+    % QQ plot:
+    subplot(3,6,6);
+    qqplot(-LL_sim_2yr_stdnorm(:),-LL_obs_2yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
+
     % % % % % % % % % 
     % Now the precip data:
     [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(precip_obs_2yr_stdnorm, precip_sim_2yr_stdnorm);
-    subplot(3,5,6:9);
+    subplot(3,6,7:10);
     plot(years, precip_obs_2yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), precip_obs_2yr_stdnorm(clusters == 1),'or',...
@@ -147,7 +174,7 @@ for i = 1:length(good_CA_IDs)
     ylm = get(gca,'Ylim');
     ylabel('Total Precipitation');
     
-    subplot(3,5,10);
+    subplot(3,6,11);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
     hold on;
@@ -155,10 +182,17 @@ for i = 1:length(good_CA_IDs)
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
     ylim(ylm);
 
+    % QQ plot:
+    subplot(3,6,12);
+    qqplot(precip_sim_2yr_stdnorm(:),precip_obs_2yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
+    
     % % % % % % % % % 
     % Now the occ data:
     [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(occ_obs_2yr_stdnorm, occ_sim_2yr_stdnorm);
-    subplot(3,5,11:14);
+    subplot(3,6,13:16);
     plot(years, occ_obs_2yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), occ_obs_2yr_stdnorm(clusters == 1),'or',...
@@ -170,7 +204,7 @@ for i = 1:length(good_CA_IDs)
     ylm = get(gca,'Ylim');
     ylabel({'Precipitation','Occurrence'});
     
-    subplot(3,5,15);
+    subplot(3,6,17);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
     hold on;
@@ -178,6 +212,13 @@ for i = 1:length(good_CA_IDs)
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
     ylim(ylm);
     
+    
+    % QQ plot:
+    subplot(3,6,18);
+    qqplot(occ_sim_2yr_stdnorm(:),occ_obs_2yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
     
     outfilename = sprintf('plots/All_TS_%s_2yr_DOY%i.png',stn_id,DOY);
     print(gcf,'-dpng',outfilename);
@@ -196,7 +237,7 @@ for i = 1:length(good_CA_IDs)
     end
     
     figure;
-    subplot(3,5,1:4);
+    subplot(3,6,1:4);
     plot(years, -LL_obs_3yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), -LL_obs_3yr_stdnorm(clusters == 1),'ob',...
@@ -209,7 +250,7 @@ for i = 1:length(good_CA_IDs)
     title(sprintf('Stn #%s: 3-yearly, Start DOY = %i',stn_id,DOY));
     ylabel('-Log-Likelihood');
    
-    subplot(3,5,5);
+    subplot(3,6,5);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),-y,'-b');
     hold on;
@@ -217,10 +258,17 @@ for i = 1:length(good_CA_IDs)
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),-y,'-r');
     ylim(ylm);
 
+    % QQ plot:
+    subplot(3,6,6);
+    qqplot(-LL_sim_3yr_stdnorm(:),-LL_obs_3yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
+
     % % % % % % % % % 
     % Now the precip data:
     [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(precip_obs_3yr_stdnorm, precip_sim_3yr_stdnorm);
-    subplot(3,5,6:9);
+    subplot(3,6,7:10);
     plot(years, precip_obs_3yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), precip_obs_3yr_stdnorm(clusters == 1),'or',...
@@ -232,7 +280,7 @@ for i = 1:length(good_CA_IDs)
     ylm = get(gca,'Ylim');
     ylabel('Total Precipitation');
     
-    subplot(3,5,10);
+    subplot(3,6,11);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
     hold on;
@@ -240,10 +288,17 @@ for i = 1:length(good_CA_IDs)
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
     ylim(ylm);
 
+    % QQ plot:
+    subplot(3,6,12);
+    qqplot(precip_sim_3yr_stdnorm(:),precip_obs_3yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
+    
     % % % % % % % % % 
     % Now the occ data:
     [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(occ_obs_3yr_stdnorm, occ_sim_3yr_stdnorm);
-    subplot(3,5,11:14);
+    subplot(3,6,13:16);
     plot(years, occ_obs_3yr_stdnorm,'-k');
     hold on;
     plot(years(clusters == 1), occ_obs_3yr_stdnorm(clusters == 1),'or',...
@@ -255,7 +310,7 @@ for i = 1:length(good_CA_IDs)
     ylm = get(gca,'Ylim');
     ylabel({'Precipitation','Occurrence'});
     
-    subplot(3,5,15);
+    subplot(3,6,17);
     y = linspace(ylm(1),ylm(2),200);
     plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
     hold on;
@@ -263,6 +318,12 @@ for i = 1:length(good_CA_IDs)
     plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
     ylim(ylm);
     
+    % QQ plot:
+    subplot(3,6,18);
+    qqplot(occ_sim_3yr_stdnorm(:),occ_obs_3yr_stdnorm(:));
+    xlabel('Sim Quantile');
+    ylabel('Obs Quantile');
+    ylim(ylm);
     
     outfilename = sprintf('plots/All_TS_%s_3yr_DOY%i.png',stn_id,DOY);
     print(gcf,'-dpng',outfilename);

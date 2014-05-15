@@ -22,7 +22,7 @@ delete('*accum_DOY*.mat');
 accumulate_LL({'oneyear','twoyear','threeyear'},today_doy,remove_seasonal_cycle);
 accumulate_LL({'oneyear','twoyear','threeyear'},1,remove_seasonal_cycle);
 
-% Transform the annualized (or bi-annualized, etc.) data to be more normal 
+% Transform the annualized (or bi-annualized, etc.) data to be more normal
 % using the sim distribution
 cdf_transform_accum_LL_data();
 

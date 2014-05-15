@@ -14,7 +14,7 @@ for i = 1:length(good_CA_IDs)
     % 1-yearly data:
     
     % Cluster the obs data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(LL_obs_1yr_stdnorm, LL_sim_1yr_stdnorm);
+    [clusters, mu_hat, sigma_hat, weights] = GMM_clusterEM(LL_obs_1yr_stdnorm, LL_sim_1yr_stdnorm);
 
     N = length(LL_obs_1yr_stdnorm);
     years = (2014-N):2013;

@@ -26,31 +26,42 @@ missing_data = isnan(int);
 int(missing_data) = 1;
 
 addpath('C:\Users\gianotti\Documents\IntensityLib');
-% We'll try 0.254mm increments starting at 0:
-increment_size = 0.254;
 
-% maximum foreseeable daily precip? ~1.5m?
-max_precip = floor(1500/increment_size)*increment_size;
+% A hard-coded switch:
+use_PMF = 0;
 
-bin_edges = 0:increment_size:max_precip;
+if use_PMF
+    % We'll try 0.254mm increments starting at 0:
+    increment_size = 0.254;
 
-cdfs = mixgamcdf(bin_edges(2:end),params); % m x 1
-cdfs = [0,cdfs]; % just in case;
+    % maximum foreseeable daily precip? ~1.5m?
+    max_precip = floor(1500/increment_size)*increment_size;
 
-bin_probabilities = diff(cdfs); % these should be all of the probabilities.
+    bin_edges = 0:increment_size:max_precip;
 
-% The sum of bin_probabilities should be 1. We'll make sure:
-bin_probabilities(end) = 1-sum(bin_probabilities(1:(end-1))); % now sum to 1
-% And then  we'll fix the end of the cdfs too:
-cdfs(end) = 1;
+    cdfs = mixgamcdf(bin_edges(2:end),params); % m x 1
+    cdfs = [0,cdfs]; % just in case;
 
-% Now we need to figure out which bin each of the values in int fit into.
-[~,which_bin] = histc(int,bin_edges);
+    bin_probabilities = diff(cdfs); % these should be all of the probabilities.
 
-p_int = bin_probabilities(which_bin);
-p_int(int == 0) = 1; % so that LL = 0
-LL_int = log(p_int)';
+    % The sum of bin_probabilities should be 1. We'll make sure:
+    bin_probabilities(end) = 1-sum(bin_probabilities(1:(end-1))); % now sum to 1
+    % And then  we'll fix the end of the cdfs too:
+    cdfs(end) = 1;
 
+    % Now we need to figure out which bin each of the values in int fit into.
+    [~,which_bin] = histc(int,bin_edges);
+
+    p_int = bin_probabilities(which_bin);
+    p_int(int == 0) = 1; % so that LL = 0
+    LL_int = log(p_int)';
+
+else % using the PDF values directly:
+    LL_int = log(mixgampdf(int,params));
+    % Set LL to zero for days with no rain:
+    LL_int(int==0) = 0;
+end
+    
 % Now re-assign the missing data to nans:
 LL_int(missing_data) = nan;
 end

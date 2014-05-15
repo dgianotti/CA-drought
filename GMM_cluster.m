@@ -31,7 +31,8 @@ clusters_best = ones(N,1);
 
 
 % BIC_best = -2*L + k*(log(N)+log(2*pi));
-BIC_best = Inf;
+% BIC_best = Inf;
+AIC_best = Inf;
 
 
 % Determine the mean and variance of the sim cluster:
@@ -78,7 +79,8 @@ for num_1s = 0:(N-1)
             + weights(2)*normpdf(obs_sorted, mu_hat(2), sigma_hat(2))...
             + weights(3)*normpdf(obs_sorted, mu_hat(3), sigma_hat(3)) ));
         
-        BIC = -2*L + k*(log(N)+log(2*pi));
+        % BIC = -2*L + k*(log(N)+log(2*pi));
+        AIC = -2*L + 2*k*N/(N-k-1);
         
         % I think this is solved by our minimum variance requirement:
 %         if any([sum(clusters==1), sum(clusters==2), sum(clusters==3)]==1)
@@ -86,9 +88,9 @@ for num_1s = 0:(N-1)
 %             BIC = Inf;
 %         end
         
-        if BIC < BIC_best
+        if AIC < AIC_best
             % Then it becomes the new best
-            BIC_best = BIC;
+            AIC_best = AIC;
             clusters_best = clusters;
         end    
     end
