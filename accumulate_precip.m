@@ -8,6 +8,11 @@ function accumulate_precip(periods, start_DOY, remove_seasonal_cycle)
 % start_DOY should be an integer between 1 and 365.
 
 load('CA_ids.mat');
+load('nino34.mat');
+nino34_monthly(nino34_monthly == -99.99) = nan;
+nino_djfma = ShiftXdays(nino34_monthly,1);
+nino_djfma = nanmean(nino_djfma(:,1:5),2);
+nino_djfma(end) = []; % Throw out 2014 (IS THIS CORRECT TO DO?!?!?!?!)		
 
 % Loop over each station
 for i = 1:length(good_CA_IDs)
@@ -68,6 +73,8 @@ for i = 1:length(good_CA_IDs)
         occ_obs_1yr = 365*nanmean(precip_obs_tmp,2); % n_years x 1
         occ_sim_1yr = 365*reshape(nanmean(precip_sim_tmp,2), [n_years,n_sims]); % As an n_years x n_sims matrix
         
+		nino_djfma_1yr = nino_djfma;
+		nino_djfma_1yr( 1:(length(nino_djfma_1yr)-length(occ_obs_1yr)) ) = [];
     end % if
     
     % % % % % % % % % % % % % % %
@@ -103,6 +110,15 @@ for i = 1:length(good_CA_IDs)
         occ_obs_2yr = 2*365*nanmean(precip_obs_tmp,2); % n_years x 1
         occ_sim_2yr = 2*365*reshape(nanmean(precip_sim_tmp,2),... 
             [length(precip_obs_2yr),size(precip_sim_tmp,1)/length(precip_obs_2yr)]); % As an n_years x n_sims matrix        
+
+		nino_djfma_2yr = nino_djfma;
+		if mod(length(nino_djfma_2yr),2) == 1 % odd
+			nino_djfma_2yr(1) = [];
+		end
+		% Combine neighboring years
+		nino_djfma_2yr = reshape(nino_djfma_2yr,[2,length(nino_djfma_2yr)/2])';
+		nino_djfma_2yr = sum(nino_djfma_2yr,2);
+		nino_djfma_2yr( 1:(length(nino_djfma_2yr)-length(occ_obs_2yr)) ) = [];
 
     end % if for 2yr
     
@@ -141,6 +157,18 @@ for i = 1:length(good_CA_IDs)
         occ_sim_3yr = 3*365*reshape(nanmean(precip_sim_tmp,2),... 
             [length(precip_obs_3yr),size(precip_sim_tmp,1)/length(precip_obs_3yr)]); % As an n_years x n_sims matrix        
 
+		nino_djfma_3yr = nino_djfma;
+		if mod(length(nino_djfma_3yr),3) == 1
+			nino_djfma_3yr(1) = [];
+		elseif mod(length(nino_djfma_3yr),3) == 2
+			nino_djfma_3yr(1:2) = [];
+		end
+		% Combine neighboring years
+		nino_djfma_3yr = reshape(nino_djfma_3yr,[3,length(nino_djfma_3yr)/3])';
+		nino_djfma_3yr = sum(nino_djfma_3yr,2);
+		nino_djfma_3yr( 1:(length(nino_djfma_3yr)-length(occ_obs_3yr)) ) = [];
+
+
     end % if for 3yr
 
     % Now save the new precip time series:
@@ -148,7 +176,8 @@ for i = 1:length(good_CA_IDs)
     save(filename, 'precip_obs_1yr','precip_sim_1yr', 'precip_obs_2yr',...
         'precip_sim_2yr','precip_obs_3yr','precip_sim_3yr',...
         'occ_obs_1yr','occ_sim_1yr', 'occ_obs_2yr','occ_sim_2yr',...
-        'occ_obs_3yr','occ_sim_3yr','id','start_DOY');
+        'occ_obs_3yr','occ_sim_3yr','id','start_DOY',...
+		'nino_djfma_1yr','nino_djfma_2yr','nino_djfma_3yr');
     
 end
 

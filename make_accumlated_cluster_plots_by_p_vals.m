@@ -3,19 +3,22 @@ function make_accumlated_cluster_plots_by_p_vals(DOY)
 load('CA_ids.mat');
 
 marker_size = 40;
-clim = [-5,5];
 
-%load('cmap_better_jet');
-%cmap = flipud(cmap_better_jet);
+stn_names = {'Chula Vista', 'Colfax', 'Davis', 'Lemon Cove', 'Livermore',...    
+	'Newport Beach','Ojai','Pasadena','Paso Robles','Petaluma',...
+	'Redlands','Santa Barbara','Yreka'};
 
-% Or, better yet,
 addpath('C:\Users\gianotti\Documents\GitHub\CA-drought\cbrewer\cbrewer\');
-cmap = cbrewer('div','RdYlBu',5,'cubic');
-n = floor(size(cmap,1)/2);
-cmap = [cmap(1:n,:); cmap(n+1,:); cmap(n+1,:); cmap(n+1,:); cmap( (n+2):end,:)];
+
+% Set the coloring intervals in terms of sigma values:
+color_intervals = [ -Inf, -4.42, -3.89, -3.28, -2.56, 2.56, 3.29, 3.89, 4.42, Inf  ];
+
+n_colors = length(color_intervals)-1;
+
+cmap = cbrewer('div','RdYlBu',n_colors,'cubic');
 
 for i = 1:length(good_CA_IDs)
-    fprintf('Clustering station %i of %i...\n',i,length(good_CA_IDs));
+    %fprintf('Clustering station %i of %i...\n',i,length(good_CA_IDs));
     stn_id = good_CA_IDs{i};
     % Load the data:
     filename = sprintf('LL_%s_accum_DOY%i.mat',stn_id,DOY);    
@@ -24,303 +27,162 @@ for i = 1:length(good_CA_IDs)
     filename = sprintf('precip_%s_accum_DOY%i.mat',stn_id,DOY);
     load(filename);
     
-    % % %% % %% % % %% 
-    % 1-yearly data:
-    
-    % Cluster the LL_obs data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(LL_obs_1yr_stdnorm, LL_sim_1yr_stdnorm);
+	figure;
+	for j = 1:9 % 9 plots -- {1,2,3} years, and {-LL, Total, Occ}
+		switch j
+			case 1 % 1yr LL
+				data_obs = -LL_obs_1yr;
+				data_sim = -LL_sim_1yr;
+				N = length(data_obs);
+				years = (2014-N):2013;
+				make_title = true;
+				title_text = sprintf('%s--Stn #%s: 1-yearly, Start DOY = %i',stn_names{i},stn_id,DOY);
+				ylabel_text = '-LL';
+				nino = nino_djfma_1yr;
 
-    N = length(LL_obs_1yr_stdnorm);
-    years = (2014-N):2013;
-    if (DOY > 1) % using something later than Jan1 start date
-        years = years+1; % so that it ends with 2014
-    end
-    
-    figure;
-    subplot(3,6,1:4);
-    plot(years, -LL_obs_1yr_stdnorm,'-k');
-    hold on;
-    scatter(years, -LL_obs_1yr_stdnorm,marker_size,-LL_obs_1yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
-    
-    ylm = get(gca,'Ylim');
-    title(sprintf('Stn #%s: 1-yearly, Start DOY = %i',stn_id,DOY));
-    ylabel('-Log-Likelihood');
-    
-    subplot(3,6,5);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),-y,'-b');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),-y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),-y,'-r');
-    ylim(ylm);
-    
-    % QQ plot:
-    subplot(3,6,6);
-    qqplot(-LL_sim_1yr_stdnorm(:),-LL_obs_1yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
+			case 2 % 1yr Total
+				data_obs = precip_obs_1yr;
+				data_sim = precip_sim_1yr;
+				N = length(data_obs);
+				years = (2014-N):2013;
+				make_title = false;
+				ylabel_text = 'Total';
+				nino = nino_djfma_1yr;
+				
+			case 3 % 1 yr Occ
+				data_obs = occ_obs_1yr;
+				data_sim = occ_sim_1yr;
+				N = length(data_obs);
+				years = (2014-N):2013;
+				make_title = false;
+				ylabel_text = 'Occ';
+				nino = nino_djfma_1yr;
+				
+			case 4 % 2 yr LL
+				data_obs = -LL_obs_2yr;
+				data_sim = -LL_sim_2yr;
+				N = length(data_obs);
+				years = (2014.5-2*N):2:2012.5;
+				make_title = true;
+				title_text = '2-yearly';
+				ylabel_text = '-LL';
+				nino = nino_djfma_2yr;
+				
+			case 5 % 2 yr Total
+				data_obs = precip_obs_2yr;
+				data_sim = precip_sim_2yr;
+				N = length(data_obs);
+				years = (2014.5-2*N):2:2012.5;
+				make_title = false;
+				ylabel_text = 'Total';
+				nino = nino_djfma_2yr;
+				
+			case 6 % 2 yr Occ
+				data_obs = occ_obs_2yr;
+				data_sim = occ_sim_2yr;
+				N = length(data_obs);
+				years = (2014.5-2*N):2:2012.5;
+				make_title = false;
+				ylabel_text = 'Occ';
+				nino = nino_djfma_2yr;
+				
+			case 7 % 3 yr LL
+				data_obs = -LL_obs_3yr;
+				data_sim = -LL_sim_3yr;
+				N = length(data_obs);
+				years = (2015-3*N):3:2012;
+				make_title = true;
+				title_text = '3-yearly';
+				ylabel_text = '-LL';
+				nino = nino_djfma_3yr;
+				
+			case 8 % 3 yr Total
+				data_obs = precip_obs_3yr;
+				data_sim = precip_sim_3yr;
+				N = length(data_obs);
+				years = (2015-3*N):3:2012;
+				make_title = false;
+				ylabel_text = 'Total';
+				nino = nino_djfma_3yr;
+				
+			case 9 % 3 yr Occ
+				data_obs = occ_obs_3yr;
+				data_sim = occ_sim_3yr;
+				N = length(data_obs);
+				years = (2015-3*N):3:2012;
+				make_title = false;
+				ylabel_text = 'Occ';
+				nino = nino_djfma_3yr;
+				
+		end % switch		
 
-    % % % % % % % % % 
-    % Now the precip data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(precip_obs_1yr_stdnorm, precip_sim_1yr_stdnorm);
-    subplot(3,6,7:10);
-    plot(years, precip_obs_1yr_stdnorm,'-k');
-    hold on;
-    scatter(years, precip_obs_1yr_stdnorm,marker_size,precip_obs_1yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
-    
-    ylm = get(gca,'Ylim');
-    ylabel('Total Precipitation');
-    
-    subplot(3,6,11);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
-    ylim(ylm);
+		data_obs = (data_obs - mean(data_sim(:))) / std(data_sim(:));
+		data_sim = (data_sim - mean(data_sim(:))) / std(data_sim(:));
+		
+		if (DOY > 1) % using something later than Jan1 start date
+			years = years+1; % so that it ends with 2014
+		end
 
-    % QQ plot:
-    subplot(3,6,12);
-    qqplot(precip_sim_1yr_stdnorm(:),precip_obs_1yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
-    
-    % % % % % % % % % 
-    % Now the occ data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(occ_obs_1yr_stdnorm, occ_sim_1yr_stdnorm);
-    subplot(3,6,13:16);
-    plot(years, occ_obs_1yr_stdnorm,'-k');
-    hold on;
-    scatter(years, occ_obs_1yr_stdnorm,marker_size,occ_obs_1yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
+		% Cluster data:
+		%[clusters, mu_hat, sigma_hat, weights] = GMM_cluster(data_obs, data_sim);
+		clusters = zeros(size(years));
+		
+		% plot time series
+		subplot(9,7, (1:4) + 7*(j-1) );
+		plot(years, data_obs,'-k');
+		hold on;
+		for col = 1:n_colors
+			selected = (data_obs >= color_intervals(col)) & ...
+				(data_obs <= color_intervals(col+1)); 
+			scatter(years(selected), data_obs(selected), marker_size, cmap(col,:), 'filled', ...
+				'MarkerEdgeColor','k');
+			clusters(selected) = col;
+		end % loop over colors
+		
+		ylm = get(gca,'Ylim');
+		xlim([1900,2015]);
 
-    ylm = get(gca,'Ylim');
-    ylabel({'Precipitation','Occurrence'});
-    
-    subplot(3,6,17);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
-    ylim(ylm);
-    
-    % QQ plot:
-    subplot(3,6,18);
-    qqplot(occ_sim_1yr_stdnorm(:),occ_obs_1yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
-    
-    outfilename = sprintf('plots/Pval_TS_%s_1yr_DOY%i.png',stn_id,DOY);
-    print(gcf,'-dpng',outfilename);
-    
-    
-    % % %% % %% % % %% 
-    % 2-yearly data:
-    
-    % Cluster the obs data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(LL_obs_2yr_stdnorm, LL_sim_2yr_stdnorm);
+		if make_title
+		    title(title_text);
+		end
+		ylabel(ylabel_text);
+		
+		% plot pdfs
+		subplot(9,7,5 + 7*(j-1));
+		y = linspace(ylm(1),ylm(2),200);
+		plot( normpdf(y,mean(data_sim(:)), std(data_sim(:)) ), y, '-k');
+		hold on;
+		plot(ksdensity(data_obs,y),y,'-r');
+		ylim(ylm);
 
-    N = length(LL_obs_2yr_stdnorm);
-    years = (2014.5-2*N):2:2012.5;
-    if (DOY > 1) % using something later than Jan1 start date
-        years = years+1; % so that it ends with 2014
-    end
-    
-    figure;
-    subplot(3,6,1:4);
-    plot(years, -LL_obs_2yr_stdnorm,'-k');
-    hold on;
-    scatter(years, -LL_obs_2yr_stdnorm,marker_size,-LL_obs_2yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
+		% plot QQ plot
+		subplot(9, 7, 6 + 7*(j-1));
+		qqplot(data_sim(:),data_obs(:));
+		xlabel('Sim Quantile');
+		ylabel('Obs Quantile');
+		ylim(ylm);
+		
+		% Plot ENSO correlation
+		subplot(9, 7, 7 + 7*(j-1));
+		for col = 1:n_colors
+			clust = clusters == col;
+			scatter(nino(clust), data_obs(clust), marker_size, cmap(col,:), 'filled', ...
+				'MarkerEdgeColor','k');
+			hold on;
+		end % loop over colors
+		nino_r2 = corrcoef(data_obs,nino);
+		xlabel(sprintf('Nino 3.4 Dec-Apr: R^2 = %1.2f',nino_r2(2)^2));
+		
 
-    ylm = get(gca,'Ylim');
-    title(sprintf('Stn #%s: 2-yearly, Start DOY = %i',stn_id,DOY));
-    ylabel('-Log-Likelihood');
+		
+	end % Loop over plot rows
+	
+	set(gcf,'Position',[1 1 1680 1800],...
+		'PaperSize',[15,18], 'PaperPosition',[1,1,14,17]);
+	outfilename = sprintf('plots/Pval_TS_%s_DOY%i.pdf',stn_id,DOY);
+    print(gcf,'-dpdf',outfilename);
+ 
+end % loop over stations
     
-    subplot(3,6,5);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),-y,'-b');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),-y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),-y,'-r');
-    ylim(ylm);
-    
-    % QQ plot:
-    subplot(3,6,6);
-    qqplot(-LL_sim_2yr_stdnorm(:),-LL_obs_2yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
-
-    % % % % % % % % % 
-    % Now the precip data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(precip_obs_2yr_stdnorm, precip_sim_2yr_stdnorm);
-    subplot(3,6,7:10);
-    plot(years, precip_obs_2yr_stdnorm,'-k');
-    hold on;
-    scatter(years, precip_obs_2yr_stdnorm,marker_size,precip_obs_2yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
-
-    ylm = get(gca,'Ylim');
-    ylabel('Total Precipitation');
-    
-    subplot(3,6,11);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
-    ylim(ylm);
-
-    % QQ plot:
-    subplot(3,6,12);
-    qqplot(precip_sim_2yr_stdnorm(:),precip_obs_2yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
-    
-    % % % % % % % % % 
-    % Now the occ data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(occ_obs_2yr_stdnorm, occ_sim_2yr_stdnorm);
-    subplot(3,6,13:16);
-    plot(years, occ_obs_2yr_stdnorm,'-k');
-    hold on;
-    scatter(years, occ_obs_2yr_stdnorm,marker_size,occ_obs_2yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
-
-    ylm = get(gca,'Ylim');
-    ylabel({'Precipitation','Occurrence'});
-    
-    subplot(3,6,17);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
-    ylim(ylm);
-    
-    
-    % QQ plot:
-    subplot(3,6,18);
-    qqplot(occ_sim_2yr_stdnorm(:),occ_obs_2yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
-    
-    outfilename = sprintf('plots/Pval_TS_%s_2yr_DOY%i.png',stn_id,DOY);
-    print(gcf,'-dpng',outfilename);
-    
-    
-    % % %% % %% % % %%
-    % 3-yearly data:
-    
-    % Cluster the obs data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(LL_obs_3yr_stdnorm, LL_sim_3yr_stdnorm);
-
-    N = length(LL_obs_3yr_stdnorm);
-    years = (2015-3*N):3:2012;
-    if (DOY > 1) % using something later than Jan1 start date
-        years = years+1; % so that it ends with 2014
-    end
-    
-    figure;
-    subplot(3,6,1:4);
-    plot(years, -LL_obs_3yr_stdnorm,'-k');
-    hold on;
-    scatter(years, -LL_obs_3yr_stdnorm,marker_size,-LL_obs_3yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
-
-    ylm = get(gca,'Ylim');
-    title(sprintf('Stn #%s: 3-yearly, Start DOY = %i',stn_id,DOY));
-    ylabel('-Log-Likelihood');
-   
-    subplot(3,6,5);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),-y,'-b');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),-y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),-y,'-r');
-    ylim(ylm);
-
-    % QQ plot:
-    subplot(3,6,6);
-    qqplot(-LL_sim_3yr_stdnorm(:),-LL_obs_3yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
-
-    % % % % % % % % % 
-    % Now the precip data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(precip_obs_3yr_stdnorm, precip_sim_3yr_stdnorm);
-    subplot(3,6,7:10);
-    plot(years, precip_obs_3yr_stdnorm,'-k');
-    hold on;
-    scatter(years, precip_obs_3yr_stdnorm,marker_size,precip_obs_3yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
-
-    ylm = get(gca,'Ylim');
-    ylabel('Total Precipitation');
-    
-    subplot(3,6,11);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
-    ylim(ylm);
-
-    % QQ plot:
-    subplot(3,6,12);
-    qqplot(precip_sim_3yr_stdnorm(:),precip_obs_3yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
-    
-    % % % % % % % % % 
-    % Now the occ data:
-    [clusters, mu_hat, sigma_hat, weights] = GMM_cluster(occ_obs_3yr_stdnorm, occ_sim_3yr_stdnorm);
-    subplot(3,6,13:16);
-    plot(years, occ_obs_3yr_stdnorm,'-k');
-    hold on;
-    scatter(years, occ_obs_3yr_stdnorm,marker_size,occ_obs_3yr_stdnorm,'filled','MarkerEdgeColor','k');
-    colormap(cmap);
-    caxis(clim);
-
-    ylm = get(gca,'Ylim');
-    ylabel({'Precipitation','Occurrence'});
-    
-    subplot(3,6,17);
-    y = linspace(ylm(1),ylm(2),200);
-    plot(weights(1)*normpdf(y,mu_hat(1),sigma_hat(1)),y,'-r');
-    hold on;
-    plot(weights(2)*normpdf(y,mu_hat(2),sigma_hat(2)),y,'-k');
-    plot(weights(3)*normpdf(y,mu_hat(3),sigma_hat(3)),y,'-b');
-    ylim(ylm);
-    
-    % QQ plot:
-    subplot(3,6,18);
-    qqplot(occ_sim_3yr_stdnorm(:),occ_obs_3yr_stdnorm(:));
-    xlabel('Sim Quantile');
-    ylabel('Obs Quantile');
-    ylim(ylm);
-    
-    outfilename = sprintf('plots/Pval_TS_%s_3yr_DOY%i.png',stn_id,DOY);
-    print(gcf,'-dpng',outfilename);
-    
-end % for loop over stations
-    
+close all;
 end % function

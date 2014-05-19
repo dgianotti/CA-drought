@@ -46,6 +46,12 @@ make_accumlated_cluster_plots(today_doy);
 % Make annual LL/precip scatter plots and seasonal time-series:
 make_annual_LL_precip_plots;
 
+%% Make plots based on p-values
+make_accumlated_cluster_plots_by_p_vals(1);
+
+
+
+
 %% Try a comparison between May 1 start date with and without May-Oct precip:
 may1 = 121;
 oct31 = 304;
